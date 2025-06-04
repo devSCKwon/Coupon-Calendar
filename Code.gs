@@ -66,64 +66,68 @@ function saveCoupon(couponData) {
  * @return {Array<Object>} An array of coupon objects.
  */
 function getCoupons() {
+  var returnValue = []; // Initialize at the very top of the try block
   try {
     var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
     if (!ss) {
-      Logger.log("Error in getCoupons: Spreadsheet not found with ID: " + SPREADSHEET_ID);
-      return []; // Critical error, spreadsheet itself not found
-    }
+      Logger.log("Error in getCoupons: Spreadsheet not found with ID: " + SPREADSHEET_ID + ". Returning empty array.");
+      // No explicit return here; will fall through to return 'returnValue'
+    } else {
+      var sheet = ss.getSheetByName(COUPON_SHEET_NAME);
+      if (!sheet) {
+        Logger.log("Info in getCoupons: Coupon sheet '" + COUPON_SHEET_NAME + "' not found. Returning empty array.");
+        // No explicit return here
+      } else {
+        if (sheet.getLastRow() === 0) {
+          Logger.log("Info in getCoupons: Coupon sheet is completely empty. Returning empty array.");
+          // No explicit return here
+        } else {
+          var dataRange = sheet.getDataRange();
+          if (!dataRange) {
+            Logger.log("Info in getCoupons: No data range found in sheet. Returning empty array.");
+            // No explicit return here
+          } else {
+            var data = dataRange.getValues();
+            if (!data || sheet.getLastRow() <= 1) {
+              Logger.log("Info in getCoupons: No actual coupon data found (sheet empty or only header). Last row: " + sheet.getLastRow() + ". Data length: " + (data ? data.length : "null") + ". Returning empty array.");
+              // No explicit return here
+            } else {
+              // If all checks pass, then process the data
+              var couponsData = [];
+              for (var i = 1; i < data.length; i++) {
+                if (data[i] && data[i][0] != "") { // Ensure barcode (column 0) is not empty
+                  couponsData.push({
+                    barcode: data[i][0],
+                    entryDate: data[i][1], // Will be Date objects
+                    expiryDate: data[i][2], // Will be Date objects
+                    isGiftCertificate: data[i][3],
+                    balance: data[i][4],
+                    originalAmount: data[i][5]
+                  });
+                }
+              }
 
-    var sheet = ss.getSheetByName(COUPON_SHEET_NAME);
-    if (!sheet) {
-      Logger.log("Info in getCoupons: Coupon sheet '" + COUPON_SHEET_NAME + "' not found. Returning empty array.");
-      return []; // Sheet doesn't exist, so no coupons.
-    }
-
-    // Check if the sheet has any data at all
-    if (sheet.getLastRow() === 0) { // Completely empty sheet
-        Logger.log("Info in getCoupons: Coupon sheet is completely empty. Returning empty array.");
-        return [];
-    }
-
-    var dataRange = sheet.getDataRange();
-    if (!dataRange) {
-        Logger.log("Info in getCoupons: No data range found in sheet. Returning empty array.");
-        return [];
-    }
-
-    var data = dataRange.getValues();
-    // Expect at least a header row and one data row for data.length >= 2
-    // If only header, data.length is 1. If empty, data.length could be 0 or 1 depending on how it's perceived.
-    // A more robust check is sheet.getLastRow() <= 1 (meaning only header or empty)
-    if (!data || sheet.getLastRow() <= 1) {
-      Logger.log("Info in getCoupons: No actual coupon data found (sheet empty or only header). Last row: " + sheet.getLastRow() + ". Data length: " + (data ? data.length : "null") + ". Returning empty array.");
-      return [];
-    }
-
-    var coupons = [];
-    // Start from 1 to skip header row (assuming data[0] is the header)
-    for (var i = 1; i < data.length; i++) {
-      // Basic check for valid row structure (e.g., barcode exists)
-      if (data[i] && data[i][0]) {
-        coupons.push({
-          barcode: data[i][0],
-          entryDate: data[i][1],
-          expiryDate: data[i][2],
-          isGiftCertificate: data[i][3],
-          balance: data[i][4],
-          originalAmount: data[i][5]
-        });
+              couponsData.sort(function(a, b) {
+                // Ensure date objects for sorting, even if they come as strings from sheet initially (less likely with getValues())
+                var dateA = (a.entryDate instanceof Date) ? a.entryDate : new Date(a.entryDate);
+                var dateB = (b.entryDate instanceof Date) ? b.entryDate : new Date(b.entryDate);
+                return dateB - dateA; // Newest first
+              });
+              returnValue = couponsData; // Assign to the main returnValue
+            }
+          }
+        }
       }
     }
-
-    coupons.sort(function(a, b) {
-      return new Date(b.entryDate) - new Date(a.entryDate);
-    });
-
-    return coupons;
+    Logger.log("Returning from getCoupons (try): " + JSON.stringify(returnValue));
+    return returnValue;
   } catch (e) {
     Logger.log("Exception in getCoupons: " + e.toString() + " Stack: " + e.stack);
-    return []; // Fallback: return empty array on any unexpected error
+    // In case of any error, returnValue is still [], or whatever it was before error.
+    // To be absolutely sure, we can return a fresh empty array from catch.
+    var fallbackValue = [];
+    Logger.log("Returning from getCoupons (catch): " + JSON.stringify(fallbackValue));
+    return fallbackValue;
   }
 }
 
