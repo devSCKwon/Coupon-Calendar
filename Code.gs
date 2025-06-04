@@ -67,38 +67,63 @@ function saveCoupon(couponData) {
  */
 function getCoupons() {
   try {
-    var sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(COUPON_SHEET_NAME);
-    if (!sheet) {
-      return []; // Or throw an error: throw new Error("Coupon sheet not found");
+    var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    if (!ss) {
+      Logger.log("Error in getCoupons: Spreadsheet not found with ID: " + SPREADSHEET_ID);
+      return []; // Critical error, spreadsheet itself not found
     }
-    // Get all data, excluding the header row
-    var data = sheet.getDataRange().getValues();
-    if (data.length < 2) {
-      return []; // No data other than header
+
+    var sheet = ss.getSheetByName(COUPON_SHEET_NAME);
+    if (!sheet) {
+      Logger.log("Info in getCoupons: Coupon sheet '" + COUPON_SHEET_NAME + "' not found. Returning empty array.");
+      return []; // Sheet doesn't exist, so no coupons.
+    }
+
+    // Check if the sheet has any data at all
+    if (sheet.getLastRow() === 0) { // Completely empty sheet
+        Logger.log("Info in getCoupons: Coupon sheet is completely empty. Returning empty array.");
+        return [];
+    }
+
+    var dataRange = sheet.getDataRange();
+    if (!dataRange) {
+        Logger.log("Info in getCoupons: No data range found in sheet. Returning empty array.");
+        return [];
+    }
+
+    var data = dataRange.getValues();
+    // Expect at least a header row and one data row for data.length >= 2
+    // If only header, data.length is 1. If empty, data.length could be 0 or 1 depending on how it's perceived.
+    // A more robust check is sheet.getLastRow() <= 1 (meaning only header or empty)
+    if (!data || sheet.getLastRow() <= 1) {
+      Logger.log("Info in getCoupons: No actual coupon data found (sheet empty or only header). Last row: " + sheet.getLastRow() + ". Data length: " + (data ? data.length : "null") + ". Returning empty array.");
+      return [];
     }
 
     var coupons = [];
-    // Start from 1 to skip header row
+    // Start from 1 to skip header row (assuming data[0] is the header)
     for (var i = 1; i < data.length; i++) {
-      coupons.push({
-        barcode: data[i][0],
-        entryDate: data[i][1],
-        expiryDate: data[i][2],
-        isGiftCertificate: data[i][3],
-        balance: data[i][4],
-        originalAmount: data[i][5]
-      });
+      // Basic check for valid row structure (e.g., barcode exists)
+      if (data[i] && data[i][0]) {
+        coupons.push({
+          barcode: data[i][0],
+          entryDate: data[i][1],
+          expiryDate: data[i][2],
+          isGiftCertificate: data[i][3],
+          balance: data[i][4],
+          originalAmount: data[i][5]
+        });
+      }
     }
 
-    // Sort by Entry Date (column 1, which is index 1 in data[i]), newest first
     coupons.sort(function(a, b) {
       return new Date(b.entryDate) - new Date(a.entryDate);
     });
 
     return coupons;
   } catch (e) {
-    Logger.log("Error in getCoupons: " + e.toString());
-    return []; // Return empty array on error
+    Logger.log("Exception in getCoupons: " + e.toString() + " Stack: " + e.stack);
+    return []; // Fallback: return empty array on any unexpected error
   }
 }
 

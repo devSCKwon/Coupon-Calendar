@@ -205,7 +205,8 @@
         showLoading(false);
         var listDiv = document.getElementById('latestCouponsList');
         listDiv.innerHTML = ''; // Clear previous list
-        if (coupons && coupons.length > 0) {
+        // Explicitly check if 'coupons' is an array and non-empty
+        if (Array.isArray(coupons) && coupons.length > 0) {
           var ul = document.createElement('ul');
           coupons.forEach(function(coupon) {
             var li = document.createElement('li');
@@ -247,24 +248,37 @@
       .withSuccessHandler(function(coupons) {
         showLoading(false);
         var tableBody = document.getElementById('allCouponsTable').getElementsByTagName('tbody')[0];
-        tableBody.innerHTML = ''; // Clear previous list
+        tableBody.innerHTML = '';
 
-        var filteredCoupons = coupons.filter(function(coupon) {
-            var entry = new Date(coupon.entryDate);
+        var couponsToProcess = [];
+        if (Array.isArray(coupons)) { // Ensure coupons is an array before trying to filter/process
+            couponsToProcess = coupons;
+        } else {
+            console.warn("Received non-array data for coupons:", coupons);
+            // Optionally, show a message to the user or handle as an empty list
+        }
+
+        var filteredCoupons = couponsToProcess.filter(function(coupon) {
+            // Make sure coupon object itself is valid before accessing properties
+            if (!coupon || typeof coupon !== 'object') return false;
+            var entry = coupon.entryDate ? new Date(coupon.entryDate) : null;
+            if (!entry) return false; // Skip if entryDate is missing or invalid
+
             if (filterStartDate && entry < new Date(filterStartDate)) {
                 return false;
             }
             if (filterEndDate) {
                 let endDate = new Date(filterEndDate);
-                endDate.setHours(23,59,59,999); // Include the whole end day
+                endDate.setHours(23,59,59,999);
                 if (entry > endDate) return false;
             }
             return true;
         });
 
-
-        if (filteredCoupons && filteredCoupons.length > 0) {
+        if (filteredCoupons.length > 0) {
           filteredCoupons.forEach(function(coupon) {
+            // Add a check within the loop too for individual coupon objects if necessary
+            if (!coupon || typeof coupon !== 'object') return; // Skip malformed coupon object
             var row = tableBody.insertRow();
             row.insertCell().textContent = coupon.barcode;
             row.insertCell().textContent = formatDate(new Date(coupon.entryDate));
