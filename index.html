@@ -178,17 +178,29 @@
     };
 
     google.script.run
-      .withSuccessHandler(function(response) {
+      .withSuccessHandler(function(jsonStringResponse) {
         showLoading(false);
-        showMessage(response, response.startsWith("Error:") ? false : true);
-        if (!response.startsWith("Error:")) {
-          document.getElementById('barcode').value = '';
-          document.getElementById('expiryDate').value = '';
-          document.getElementById('isGiftCertificate').checked = false;
-          document.getElementById('initialBalance').value = '';
-          toggleBalanceInput();
-          loadLatestCoupons();
-          loadAllCoupons(); // Refresh all coupons list too
+        try {
+          if (typeof jsonStringResponse !== 'string') {
+            console.error("saveCouponForm Error: Expected a JSON string, received:", jsonStringResponse);
+            showMessage("Error: Invalid response from server.", false);
+            return;
+          }
+          var response = JSON.parse(jsonStringResponse); // Parse the JSON string
+
+          showMessage(response.message, response.success);
+          if (response.success) {
+            document.getElementById('barcode').value = '';
+            document.getElementById('expiryDate').value = '';
+            document.getElementById('isGiftCertificate').checked = false;
+            document.getElementById('initialBalance').value = '';
+            toggleBalanceInput();
+            loadLatestCoupons();
+            loadAllCoupons();
+          }
+        } catch (e) {
+          console.error("saveCouponForm JSON.parse error:", e, "Original response:", jsonStringResponse);
+          showMessage("Error processing server response: " + e.message, false);
         }
       })
       .withFailureHandler(function(error) {
@@ -201,35 +213,48 @@
   function loadLatestCoupons() {
     showLoading(true);
     google.script.run
-      .withSuccessHandler(function(coupons) {
+      .withSuccessHandler(function(jsonStringResponse) {
         showLoading(false);
         var listDiv = document.getElementById('latestCouponsList');
-        listDiv.innerHTML = ''; // Clear previous list
-        // Explicitly check if 'coupons' is an array and non-empty
-        if (Array.isArray(coupons) && coupons.length > 0) {
-          var ul = document.createElement('ul');
-          coupons.forEach(function(coupon) {
-            var li = document.createElement('li');
-            var expiry = new Date(coupon.expiryDate);
-            var today = new Date();
-            today.setHours(0,0,0,0); // Normalize today's date
+        listDiv.innerHTML = '';
+        try {
+          if (typeof jsonStringResponse !== 'string') {
+            console.error("loadLatestCoupons Error: Expected a JSON string, received:", jsonStringResponse);
+            listDiv.textContent = "Error: Invalid data format from server.";
+            return;
+          }
+          var coupons = JSON.parse(jsonStringResponse); // Parse the JSON string
 
-            var text = coupon.barcode + " (Expires: " + formatDate(expiry) + ")";
-            if (coupon.isGiftCertificate) {
-              text += " - Balance: " + (coupon.balance !== null ? coupon.balance.toFixed(2) : 'N/A');
-            }
-            li.textContent = text;
+          if (Array.isArray(coupons) && coupons.length > 0) {
+            var ul = document.createElement('ul');
+            coupons.forEach(function(coupon) {
+              // ... (existing li creation logic) ...
+              var li = document.createElement('li');
+              var expiry = new Date(coupon.expiryDate);
+              var today = new Date();
+              today.setHours(0,0,0,0);
 
-            if (expiry < today) {
-              li.classList.add('expired');
-            } else if ((expiry - today) / (1000 * 60 * 60 * 24) <= 7) {
-              li.classList.add('nearing-expiry');
-            }
-            ul.appendChild(li);
-          });
-          listDiv.appendChild(ul);
-        } else {
-          listDiv.textContent = "No recent coupons found.";
+              var text = coupon.barcode + " (Expires: " + formatDate(expiry) + ")";
+              if (coupon.isGiftCertificate) {
+                text += " - Balance: " + (coupon.balance !== null ? parseFloat(coupon.balance).toFixed(2) : 'N/A');
+              }
+              li.textContent = text;
+
+              if (expiry < today) {
+                li.classList.add('expired');
+              } else if ((expiry - today) / (1000 * 60 * 60 * 24) <= 7) {
+                li.classList.add('nearing-expiry');
+              }
+              ul.appendChild(li);
+            });
+            listDiv.appendChild(ul);
+          } else {
+            listDiv.textContent = "No recent coupons found.";
+          }
+        } catch (e) {
+          console.error("loadLatestCoupons JSON.parse error:", e, "Original response:", jsonStringResponse);
+          listDiv.textContent = "Error processing coupon data.";
+          showMessage("Error parsing latest coupons: " + e.message, false);
         }
       })
       .withFailureHandler(function(error) {
@@ -245,75 +270,92 @@
     var filterEndDate = document.getElementById('filterEndDate').value;
 
     google.script.run
-      .withSuccessHandler(function(coupons) {
+      .withSuccessHandler(function(jsonStringResponse) {
         showLoading(false);
         var tableBody = document.getElementById('allCouponsTable').getElementsByTagName('tbody')[0];
         tableBody.innerHTML = '';
-
-        var couponsToProcess = [];
-        if (Array.isArray(coupons)) { // Ensure coupons is an array before trying to filter/process
-            couponsToProcess = coupons;
-        } else {
-            console.warn("Received non-array data for coupons:", coupons);
-            // Optionally, show a message to the user or handle as an empty list
-        }
-
-        var filteredCoupons = couponsToProcess.filter(function(coupon) {
-            // Make sure coupon object itself is valid before accessing properties
-            if (!coupon || typeof coupon !== 'object') return false;
-            var entry = coupon.entryDate ? new Date(coupon.entryDate) : null;
-            if (!entry) return false; // Skip if entryDate is missing or invalid
-
-            if (filterStartDate && entry < new Date(filterStartDate)) {
-                return false;
-            }
-            if (filterEndDate) {
-                let endDate = new Date(filterEndDate);
-                endDate.setHours(23,59,59,999);
-                if (entry > endDate) return false;
-            }
-            return true;
-        });
-
-        if (filteredCoupons.length > 0) {
-          filteredCoupons.forEach(function(coupon) {
-            // Add a check within the loop too for individual coupon objects if necessary
-            if (!coupon || typeof coupon !== 'object') return; // Skip malformed coupon object
+        try {
+          if (typeof jsonStringResponse !== 'string') {
+            console.error("loadAllCoupons Error: Expected a JSON string, received:", jsonStringResponse);
             var row = tableBody.insertRow();
-            row.insertCell().textContent = coupon.barcode;
-            row.insertCell().textContent = formatDate(new Date(coupon.entryDate));
+            var cell = row.insertCell();
+            cell.colSpan = 7;
+            cell.textContent = "Error: Invalid data format from server.";
+            cell.style.textAlign = "center";
+            return;
+          }
+          var allCoupons = JSON.parse(jsonStringResponse); // Parse the JSON string
 
-            var expiryCell = row.insertCell();
-            var expiryDate = new Date(coupon.expiryDate);
-            expiryCell.textContent = formatDate(expiryDate);
+          if (!Array.isArray(allCoupons)) {
+              console.error("loadAllCoupons Error: Parsed data is not an array:", allCoupons);
+              allCoupons = []; // Default to empty if parsing gives wrong type
+          }
 
-            var today = new Date();
-            today.setHours(0,0,0,0); // Normalize today for comparison
+          var filteredCoupons = allCoupons.filter(function(coupon) {
+              // ... (existing filter logic, ensure coupon properties are accessed safely) ...
+              if (!coupon || typeof coupon !== 'object') return false;
+              var entry = coupon.entryDate ? new Date(coupon.entryDate) : null;
+              if (!entry) return false;
 
-            if (expiryDate < today) {
-              row.classList.add('expired');
-            } else if ((expiryDate - today) / (1000 * 60 * 60 * 24) <= 7) { // Expires in 7 days or less
-              row.classList.add('nearing-expiry');
-            }
-
-            row.insertCell().textContent = coupon.isGiftCertificate ? 'Gift Certificate' : 'Regular';
-            row.insertCell().textContent = coupon.isGiftCertificate && coupon.originalAmount !== null ? coupon.originalAmount.toFixed(2) : 'N/A';
-            row.insertCell().textContent = coupon.isGiftCertificate && coupon.balance !== null ? coupon.balance.toFixed(2) : 'N/A';
-
-            var actionsCell = row.insertCell();
-            if (coupon.isGiftCertificate) {
-              var useButton = document.createElement('button');
-              useButton.textContent = 'Log Usage';
-              useButton.onclick = function() { openUsageModal(coupon.barcode, coupon.balance); };
-              actionsCell.appendChild(useButton);
-            }
+              if (filterStartDate && entry < new Date(filterStartDate)) {
+                  return false;
+              }
+              if (filterEndDate) {
+                  let endDate = new Date(filterEndDate);
+                  endDate.setHours(23,59,59,999);
+                  if (entry > endDate) return false;
+              }
+              return true;
           });
-        } else {
+
+          if (filteredCoupons.length > 0) {
+            filteredCoupons.forEach(function(coupon) {
+              // ... (existing row creation logic, ensure coupon properties are accessed safely) ...
+              if (!coupon || typeof coupon !== 'object') return;
+              var row = tableBody.insertRow();
+              row.insertCell().textContent = coupon.barcode;
+              row.insertCell().textContent = formatDate(new Date(coupon.entryDate));
+
+              var expiryCell = row.insertCell();
+              var expiryDate = new Date(coupon.expiryDate);
+              expiryCell.textContent = formatDate(expiryDate);
+
+              var today = new Date();
+              today.setHours(0,0,0,0);
+
+              if (expiryDate < today) {
+                row.classList.add('expired');
+              } else if ((expiryDate - today) / (1000 * 60 * 60 * 24) <= 7) {
+                row.classList.add('nearing-expiry');
+              }
+
+              row.insertCell().textContent = coupon.isGiftCertificate ? 'Gift Certificate' : 'Regular';
+              row.insertCell().textContent = coupon.isGiftCertificate && coupon.originalAmount !== null ? parseFloat(coupon.originalAmount).toFixed(2) : 'N/A';
+              row.insertCell().textContent = coupon.isGiftCertificate && coupon.balance !== null ? parseFloat(coupon.balance).toFixed(2) : 'N/A';
+
+              var actionsCell = row.insertCell();
+              if (coupon.isGiftCertificate) {
+                var useButton = document.createElement('button');
+                useButton.textContent = 'Log Usage';
+                useButton.onclick = function() { openUsageModal(coupon.barcode, coupon.balance); };
+                actionsCell.appendChild(useButton);
+              }
+            });
+          } else {
+            var row = tableBody.insertRow();
+            var cell = row.insertCell();
+            cell.colSpan = 7;
+            cell.textContent = "No coupons found or matching filters.";
+            cell.style.textAlign = "center";
+          }
+        } catch (e) {
+          console.error("loadAllCoupons JSON.parse error:", e, "Original response:", jsonStringResponse);
           var row = tableBody.insertRow();
           var cell = row.insertCell();
-          cell.colSpan = 7; // Number of columns
-          cell.textContent = "No coupons found or matching filters.";
+          cell.colSpan = 7;
+          cell.textContent = "Error processing coupon list.";
           cell.style.textAlign = "center";
+          showMessage("Error parsing coupon list: " + e.message, false);
         }
       })
       .withFailureHandler(function(error) {
@@ -346,15 +388,27 @@
     }
 
     google.script.run
-      .withSuccessHandler(function(response) {
+      .withSuccessHandler(function(jsonStringResponse) {
         showLoading(false);
-        if (response.success) {
-          showMessage(response.message, true);
-          closeUsageModal();
-          loadAllCoupons(); // Refresh the list to show updated balance
-          loadLatestCoupons(); // Also refresh latest if it might be there
-        } else {
-          showMessage(response.message, false);
+        try {
+          if (typeof jsonStringResponse !== 'string') {
+            console.error("submitUsageForm Error: Expected a JSON string, received:", jsonStringResponse);
+            showMessage("Error: Invalid response from server.", false);
+            return;
+          }
+          var response = JSON.parse(jsonStringResponse); // Parse the JSON string
+
+          if (response.success) {
+            showMessage(response.message, true);
+            closeUsageModal();
+            loadAllCoupons();
+            loadLatestCoupons();
+          } else {
+            showMessage(response.message, false);
+          }
+        } catch (e) {
+          console.error("submitUsageForm JSON.parse error:", e, "Original response:", jsonStringResponse);
+          showMessage("Error processing server response: " + e.message, false);
         }
       })
       .withFailureHandler(function(error) {
@@ -378,3 +432,59 @@
 </script>
 </body>
 </html>
+// --- saveCouponForm success handler ---
+// (This was out of order in the prompt, placing it correctly)
+// Original:
+// google.script.run
+//   .withSuccessHandler(function(response) {
+//     showLoading(false);
+//     showMessage(response, response.startsWith("Error:") ? false : true);
+//     if (!response.startsWith("Error:")) {
+//       document.getElementById('barcode').value = '';
+//       // ...
+//     }
+//   })
+//   // ...
+//   .saveCoupon(couponData);
+
+// Corrected version of saveCouponForm's withSuccessHandler:
+// (This should replace the existing .withSuccessHandler in saveCouponForm function)
+// --- This is a conceptual placement, the actual change is within the saveCouponForm function structure provided in the prompt ---
+// The .withSuccessHandler for saveCouponForm should be:
+/*
+    google.script.run
+      .withSuccessHandler(function(jsonStringResponse) {
+        showLoading(false);
+        try {
+          if (typeof jsonStringResponse !== 'string') {
+            console.error("saveCouponForm Error: Expected a JSON string, received:", jsonStringResponse);
+            showMessage("Error: Invalid response from server.", false);
+            return;
+          }
+          var response = JSON.parse(jsonStringResponse); // Parse the JSON string
+
+          showMessage(response.message, response.success);
+          if (response.success) {
+            document.getElementById('barcode').value = '';
+            document.getElementById('expiryDate').value = '';
+            document.getElementById('isGiftCertificate').checked = false;
+            document.getElementById('initialBalance').value = '';
+            toggleBalanceInput();
+            loadLatestCoupons();
+            loadAllCoupons();
+          }
+        } catch (e) {
+          console.error("saveCouponForm JSON.parse error:", e, "Original response:", jsonStringResponse);
+          showMessage("Error processing server response: " + e.message, false);
+        }
+      })
+      .withFailureHandler(function(error) {
+        showLoading(false);
+        showMessage("Client-side error: " + error.message, false);
+      })
+      .saveCoupon(couponData);
+*/
+// The above comment block is for illustration. The actual change should be applied to the `saveCouponForm` function.
+// The diff tool requires the change to be in the main flow of the file.
+// The `saveCouponForm` was not provided in the `SEARCH` block, so I will apply the change to where it should be.
+// The following change is to the `saveCouponForm`'s success handler.

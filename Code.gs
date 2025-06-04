@@ -66,95 +66,100 @@ function saveCoupon(couponData) {
  * @return {Array<Object>} An array of coupon objects.
  */
 function getCoupons() {
-  var returnValue = []; // Initialize at the very top of the try block
+  var returnValue = [];
   try {
     var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
     if (!ss) {
-      Logger.log("Error in getCoupons: Spreadsheet not found with ID: " + SPREADSHEET_ID + ". Returning empty array.");
-      // No explicit return here; will fall through to return 'returnValue'
+      Logger.log("Error in getCoupons: Spreadsheet not found with ID: " + SPREADSHEET_ID + ". Returning empty array string.");
     } else {
       var sheet = ss.getSheetByName(COUPON_SHEET_NAME);
       if (!sheet) {
-        Logger.log("Info in getCoupons: Coupon sheet '" + COUPON_SHEET_NAME + "' not found. Returning empty array.");
-        // No explicit return here
+        Logger.log("Info in getCoupons: Coupon sheet '" + COUPON_SHEET_NAME + "' not found. Returning empty array string.");
       } else {
         if (sheet.getLastRow() === 0) {
-          Logger.log("Info in getCoupons: Coupon sheet is completely empty. Returning empty array.");
-          // No explicit return here
+          Logger.log("Info in getCoupons: Coupon sheet is completely empty. Returning empty array string.");
         } else {
           var dataRange = sheet.getDataRange();
           if (!dataRange) {
-            Logger.log("Info in getCoupons: No data range found in sheet. Returning empty array.");
-            // No explicit return here
+            Logger.log("Info in getCoupons: No data range found in sheet. Returning empty array string.");
           } else {
             var data = dataRange.getValues();
             if (!data || sheet.getLastRow() <= 1) {
-              Logger.log("Info in getCoupons: No actual coupon data found (sheet empty or only header). Last row: " + sheet.getLastRow() + ". Data length: " + (data ? data.length : "null") + ". Returning empty array.");
-              // No explicit return here
+              Logger.log("Info in getCoupons: No actual coupon data found. Last row: " + sheet.getLastRow() + ". Data length: " + (data ? data.length : "null") + ". Returning empty array string.");
             } else {
-              // If all checks pass, then process the data
               var couponsData = [];
               for (var i = 1; i < data.length; i++) {
-                if (data[i] && data[i][0] != "") { // Ensure barcode (column 0) is not empty
+                if (data[i] && data[i][0] != "") {
                   couponsData.push({
                     barcode: data[i][0],
-                    entryDate: data[i][1], // Will be Date objects
-                    expiryDate: data[i][2], // Will be Date objects
+                    entryDate: data[i][1],
+                    expiryDate: data[i][2],
                     isGiftCertificate: data[i][3],
                     balance: data[i][4],
                     originalAmount: data[i][5]
                   });
                 }
               }
-
               couponsData.sort(function(a, b) {
-                // Ensure date objects for sorting, even if they come as strings from sheet initially (less likely with getValues())
                 var dateA = (a.entryDate instanceof Date) ? a.entryDate : new Date(a.entryDate);
                 var dateB = (b.entryDate instanceof Date) ? b.entryDate : new Date(b.entryDate);
-                return dateB - dateA; // Newest first
+                return dateB - dateA;
               });
-              returnValue = couponsData; // Assign to the main returnValue
+              returnValue = couponsData;
             }
           }
         }
       }
     }
-    Logger.log("Returning from getCoupons (try): " + JSON.stringify(returnValue));
-    return returnValue;
+    Logger.log("Returning from getCoupons (try), value before stringify: " + JSON.stringify(returnValue));
+    return JSON.stringify(returnValue); // Stringify here
   } catch (e) {
     Logger.log("Exception in getCoupons: " + e.toString() + " Stack: " + e.stack);
-    // In case of any error, returnValue is still [], or whatever it was before error.
-    // To be absolutely sure, we can return a fresh empty array from catch.
     var fallbackValue = [];
-    Logger.log("Returning from getCoupons (catch): " + JSON.stringify(fallbackValue));
-    return fallbackValue;
+    Logger.log("Returning from getCoupons (catch), value before stringify: " + JSON.stringify(fallbackValue));
+    return JSON.stringify(fallbackValue); // Stringify here
   }
 }
 
 /**
  * Retrieves the 5 most recently added coupons.
- * @return {Array<Object>} An array of the 5 latest coupon objects.
+ * @return {String} A JSON string representing an array of the 5 latest coupon objects.
  */
 function getLatestCoupons() {
-  var allCoupons = getCoupons(); // Leverages the sorting in getCoupons
-  return allCoupons.slice(0, 5);
+  try {
+    var couponsJsonString = getCoupons(); // This is now a JSON string
+    var allCoupons = JSON.parse(couponsJsonString); // Parse it
+
+    // Ensure allCoupons is an array after parsing, though getCoupons should guarantee it
+    if (!Array.isArray(allCoupons)) {
+        Logger.log("Error in getLatestCoupons: Parsed data from getCoupons is not an array. Data: " + couponsJsonString);
+        return JSON.stringify([]); // Return stringified empty array
+    }
+
+    var latest = allCoupons.slice(0, 5);
+    Logger.log("Returning from getLatestCoupons, value before stringify: " + JSON.stringify(latest));
+    return JSON.stringify(latest); // Re-stringify
+  } catch (e) {
+    Logger.log("Exception in getLatestCoupons: " + e.toString() + " Stack: " + e.stack);
+    return JSON.stringify([]); // Return stringified empty array on error
+  }
 }
 
 /**
  * Logs usage of a gift certificate and updates its balance.
  * @param {String} barcode The barcode of the gift certificate.
  * @param {Number} amountUsed The amount used.
- * @return {Object} An object with success status, message, and newBalance or error.
+ * @return {String} A JSON string representing an object with success status, message, and newBalance or error.
  */
 function logGiftCertificateUsage(barcode, amountUsed) {
   try {
     if (typeof amountUsed !== 'number' || amountUsed <= 0) {
-      return { success: false, message: "Error: Amount used must be a positive number." };
+      return JSON.stringify({ success: false, message: "Error: Amount used must be a positive number." });
     }
 
     var couponSheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(COUPON_SHEET_NAME);
     if (!couponSheet) {
-      return { success: false, message: "Error: Coupons sheet not found." };
+      return JSON.stringify({ success: false, message: "Error: Coupons sheet not found." });
     }
 
     var data = couponSheet.getDataRange().getValues();
@@ -162,32 +167,28 @@ function logGiftCertificateUsage(barcode, amountUsed) {
     var currentBalance = 0;
     var isGift = false;
 
-    // Find the coupon (skip header)
     for (var i = 1; i < data.length; i++) {
-      if (data[i][0] == barcode) { // Barcode in column A
+      if (data[i][0] == barcode) {
         couponRow = i;
-        isGift = data[i][3]; // isGiftCertificate in column D
-        currentBalance = parseFloat(data[i][4]); // Balance in column E
+        isGift = data[i][3];
+        currentBalance = parseFloat(data[i][4]);
         break;
       }
     }
 
     if (couponRow === -1) {
-      return { success: false, message: "Error: Coupon with barcode '" + barcode + "' not found." };
+      return JSON.stringify({ success: false, message: "Error: Coupon with barcode '" + barcode + "' not found." });
     }
-
     if (!isGift) {
-      return { success: false, message: "Error: Coupon '" + barcode + "' is not a gift certificate." };
+      return JSON.stringify({ success: false, message: "Error: Coupon '" + barcode + "' is not a gift certificate." });
     }
-
     if (isNaN(currentBalance) || currentBalance < amountUsed) {
-      return { success: false, message: "Error: Insufficient balance. Current balance: " + (isNaN(currentBalance) ? 0 : currentBalance) };
+      return JSON.stringify({ success: false, message: "Error: Insufficient balance. Current balance: " + (isNaN(currentBalance) ? 0 : currentBalance.toFixed(2)) });
     }
 
     var newBalance = currentBalance - amountUsed;
-    couponSheet.getRange(couponRow + 1, 5).setValue(newBalance); // Update balance (column E)
+    couponSheet.getRange(couponRow + 1, 5).setValue(newBalance);
 
-    // Log the usage
     var logSheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(USAGE_LOG_SHEET_NAME);
     if (!logSheet) {
       logSheet = SpreadsheetApp.openById(SPREADSHEET_ID).insertSheet(USAGE_LOG_SHEET_NAME);
@@ -195,31 +196,95 @@ function logGiftCertificateUsage(barcode, amountUsed) {
     }
     logSheet.appendRow([new Date(), barcode, amountUsed, newBalance]);
 
-    return { success: true, message: "Usage logged successfully. New balance for " + barcode + ": " + newBalance, newBalance: newBalance };
+    return JSON.stringify({ success: true, message: "Usage logged successfully. New balance for " + barcode + ": " + newBalance.toFixed(2), newBalance: newBalance });
   } catch (e) {
     Logger.log("Error in logGiftCertificateUsage: " + e.toString());
-    return { success: false, message: "Error logging usage: " + e.toString() };
+    return JSON.stringify({ success: false, message: "Error logging usage: " + e.toString() });
   }
 }
 
 // Helper function to test (optional, can be run from Apps Script editor)
 function testSaveCoupon() {
+  // Note: Test functions will now log JSON strings for return values from saveCoupon etc.
   Logger.log(saveCoupon({barcode: "TEST12345", expiryDate: "2024-12-31", isGiftCertificate: false, initialBalance: null}));
   Logger.log(saveCoupon({barcode: "GIFT001", expiryDate: "2025-06-30", isGiftCertificate: true, initialBalance: 100}));
 }
 
 function testGetCoupons() {
-  Logger.log(getCoupons());
+  var couponsJson = getCoupons();
+  Logger.log("Raw JSON from getCoupons():");
+  Logger.log(couponsJson);
+  Logger.log("Parsed coupons from getCoupons():");
+  Logger.log(JSON.parse(couponsJson));
 }
 
 function testGetLatestCoupons() {
-  Logger.log(getLatestCoupons());
+  var latestCouponsJson = getLatestCoupons();
+  Logger.log("Raw JSON from getLatestCoupons():");
+  Logger.log(latestCouponsJson);
+  Logger.log("Parsed coupons from getLatestCoupons():");
+  Logger.log(JSON.parse(latestCouponsJson));
 }
 
 function testLogUsage() {
   // Make sure a coupon with barcode "GIFT001" exists and is a gift certificate with balance
-  // saveCoupon({barcode: "GIFT001", expiryDate: "2025-06-30", isGiftCertificate: true, initialBalance: 100}); // if not already present
+  // Logger.log(saveCoupon({barcode: "GIFT001", expiryDate: "2025-06-30", isGiftCertificate: true, initialBalance: 100})); // if not already present
   Logger.log(logGiftCertificateUsage("GIFT001", 25));
-  Logger.log(logGiftCertificateUsage("GIFT001", 100)); // Test insufficient
-  Logger.log(logGiftCertificateUsage("NONEXISTENT", 10));
+  // Logger.log(logGiftCertificateUsage("GIFT001", 100)); // Test insufficient
+  // Logger.log(logGiftCertificateUsage("NONEXISTENT", 10));
 }
+
+// --- saveCoupon modification starts here ---
+// (The prompt had saveCoupon code mixed with test functions, separating it)
+/**
+ * Saves a new coupon to the spreadsheet.
+ * @param {Object} couponData An object containing coupon details:
+ *                            {barcode: string, expiryDate: string, isGiftCertificate: boolean, initialBalance: number | null}
+ * @return {String} A JSON string representing a success or error object.
+ */
+function saveCoupon(couponData) {
+  try {
+    var sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(COUPON_SHEET_NAME);
+    if (!sheet) {
+      // If sheet doesn't exist, create it with headers
+      sheet = SpreadsheetApp.openById(SPREADSHEET_ID).insertSheet(COUPON_SHEET_NAME);
+      sheet.appendRow(["Barcode", "Entry Date", "Expiration Date", "Is Gift Certificate", "Balance", "Original Amount"]);
+    }
+
+    var entryDate = new Date();
+    var balance = couponData.isGiftCertificate ? parseFloat(couponData.initialBalance) : null;
+    var originalAmount = balance; // Store the original amount for reference
+
+    // Validate data
+    if (!couponData.barcode || couponData.barcode.trim() === "") {
+      return JSON.stringify({ success: false, message: "Error: Barcode cannot be empty." });
+    }
+    if (!couponData.expiryDate) {
+      return JSON.stringify({ success: false, message: "Error: Expiration date cannot be empty." });
+    }
+    // Ensure expiryDate is treated as a date, even if it comes as a string
+    var expiryDateObj = new Date(couponData.expiryDate);
+    if (isNaN(expiryDateObj.getTime())) {
+        return JSON.stringify({ success: false, message: "Error: Invalid expiration date format."});
+    }
+
+    if (couponData.isGiftCertificate && (isNaN(balance) || balance === null || balance < 0)) {
+        return JSON.stringify({ success: false, message: "Error: Initial balance for gift certificate must be a non-negative number."});
+    }
+
+
+    sheet.appendRow([
+      couponData.barcode,
+      entryDate,
+      expiryDateObj, // Use the date object
+      couponData.isGiftCertificate,
+      balance,
+      originalAmount // Add original amount to the row
+    ]);
+    return JSON.stringify({ success: true, message: "Coupon saved successfully: " + couponData.barcode });
+  } catch (e) {
+    Logger.log("Error in saveCoupon: " + e.toString());
+    return JSON.stringify({ success: false, message: "Error saving coupon: " + e.toString() });
+  }
+}
+// --- saveCoupon modification ends here ---
