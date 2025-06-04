@@ -2,92 +2,365 @@
 <html>
 <head>
   <base target="_top">
-  <title>Coupon Manager</title>
-  <!-- Include style.html and script.html later -->
+  <title>Coupon Management System</title>
   <style>
-    <?!= HtmlService.createHtmlOutputFromFile('style.html').getContent(); ?>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    .container { margin-bottom: 30px; }
+    .coupon-form, .usage-form, .filters { margin-bottom: 20px; padding:15px; border:1px solid #ccc; border-radius:5px; }
+    label { display: block; margin-top: 10px; }
+    input[type="text"], input[type="date"], input[type="number"], select {
+      width: calc(100% - 22px);
+      padding: 10px;
+      margin-top: 5px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+    input[type="checkbox"] { margin-top: 10px; }
+    button { padding: 10px 15px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer; margin-top:15px;}
+    button:hover { background-color: #45a049; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+    th { background-color: #f2f2f2; }
+    .expired { background-color: #ffdddd; color: #a00000; } /* Past due */
+    .nearing-expiry { background-color: #fff0dd; color: #c57500; } /* Nearing expiry (e.g. within 7 days) */
+    .message { padding: 10px; margin-top: 10px; border-radius: 4px; }
+    .success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+    .error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+    #loading { display: none; text-align: center; padding: 20px; }
   </style>
 </head>
 <body>
-  <h1>Coupon Manager</h1>
+  <h1>Coupon Management System</h1>
 
-  <div id="userMessage" style="color: green; font-weight: bold;"></div>
-  <div id="errorMessage" style="color: red; font-weight: bold;"></div>
+  <div id="loading">Loading...</div>
+  <div id="statusMessage" class="message" style="display:none;"></div>
 
-  <h2>Add New Coupon</h2>
-  <form id="couponForm">
-    <div>
-      <label for="barcode">Barcode Number:</label>
+  <!-- Coupon Entry Form -->
+  <div class="container">
+    <h2>Add New Coupon</h2>
+    <div class="coupon-form">
+      <label for="barcode">Barcode:</label>
       <input type="text" id="barcode" name="barcode" required>
-    </div>
-    <div>
+
+      <label for="expiryDate">Expiration Date:</label>
+      <input type="text" id="expiryDate" name="expiryDate" required onfocus="(this.type='date')">
+
+
+      <input type="checkbox" id="isGiftCertificate" name="isGiftCertificate" onchange="toggleBalanceInput()">
+      <label for="isGiftCertificate" style="display:inline;">Is this a Gift Certificate?</label>
+
+      <div id="initialBalanceGroup" style="display:none;">
+        <label for="initialBalance">Initial Balance:</label>
+        <input type="number" id="initialBalance" name="initialBalance" min="0" step="0.01">
+      </div>
+
+      <!-- Optional: File input for image - functionality for image processing not included yet -->
+      <!--
       <label for="barcodeImage">Barcode Image (Optional):</label>
       <input type="file" id="barcodeImage" name="barcodeImage" accept="image/*">
-      <img id="imagePreview" src="#" alt="Image Preview" style="max-width: 200px; max-height: 100px; display: none;"/>
+      -->
+      <button onclick="saveCouponForm()">Save Coupon</button>
     </div>
-    <div>
-      <label for="inputDate">Input Date:</label>
-      <input type="date" id="inputDate" name="inputDate" required>
-    </div>
-    <div>
-      <label for="expiryDate">Expiry Date:</label>
-      <input type="date" id="expiryDate" name="expiryDate" required>
-    </div>
-    <div>
-      <label for="isMonetaryValue">Is Monetary Value Coupon?</label>
-      <input type="checkbox" id="isMonetaryValue" name="isMonetaryValue">
-    </div>
-    <div id="initialValueRow" style="display: none;">
-      <label for="initialValue">Initial Value (e.g., 50.00):</label>
-      <input type="number" id="initialValue" name="initialValue" step="0.01">
-    </div>
-    <div>
-      <label for="notes">Notes (Optional):</label>
-      <textarea id="notes" name="notes" rows="3"></textarea>
-    </div>
-    <div>
-      <button type="submit" id="saveCouponButton">Save Coupon</button>
-      <div id="loader" style="display: none;">Saving...</div>
-    </div>
-  </form>
-
-  <hr>
-
-  <h2>Expiring Soon</h2>
-  <div id="expiringCouponsList">
-    <p>Loading expiring coupons...</p>
   </div>
 
-  <hr>
-
-  <h2>Recent Coupons (Last 5 Added)</h2>
-  <div id="recentCouponsList">
-    <p>Loading recent coupons...</p>
+  <!-- Latest 5 Coupons -->
+  <div class="container">
+    <h2>Latest Coupons</h2>
+    <div id="latestCouponsList">
+      <!-- Latest coupons will be loaded here -->
+    </div>
+    <button onclick="loadLatestCoupons()">Refresh Latest</button>
   </div>
 
-  <hr>
-
-  <h2>All Coupons</h2>
-  <div>
-    <label for="filterDateType">Filter by:</label>
-    <select id="filterDateType">
-        <option value="InputDate">Input Date</option>
-        <option value="ExpiryDate">Expiry Date</option>
-    </select>
-    <label for="filterStartDate">From:</label>
-    <input type="date" id="filterStartDate">
-    <label for="filterEndDate">To:</label>
-    <input type="date" id="filterEndDate">
-    <button id="filterButton">Filter</button>
-    <button id="clearFilterButton">Clear Filter</button>
+  <!-- All Coupons List -->
+  <div class="container">
+    <h2>All Coupons</h2>
+    <div class="filters">
+      <label for="filterStartDate">Filter by Entry Date (Start):</label>
+      <input type="text" id="filterStartDate" onfocus="(this.type='date')">
+      <label for="filterEndDate">Filter by Entry Date (End):</label>
+      <input type="text" id="filterEndDate" onfocus="(this.type='date')">
+      <button onclick="loadAllCoupons()">Apply Filter / Refresh List</button>
+    </div>
+    <table id="allCouponsTable">
+      <thead>
+        <tr>
+          <th>Barcode</th>
+          <th>Entry Date</th>
+          <th>Expiration Date</th>
+          <th>Type</th>
+          <th>Original Amount</th>
+          <th>Balance</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- All coupons will be loaded here -->
+      </tbody>
+    </table>
   </div>
-  <div id="allCouponsList">
-    <p>Loading all coupons...</p>
+
+  <!-- Gift Certificate Usage Modal (simplified for now) -->
+  <div id="usageModal" style="display:none; position:fixed; top:20%; left:50%; transform:translate(-50%, -20%); background:white; padding:20px; border:1px solid #ccc; box-shadow: 0 0 10px rgba(0,0,0,0.1); z-index:1000;">
+    <h3>Log Gift Certificate Usage</h3>
+    <div class="usage-form">
+      <input type="hidden" id="usageBarcode">
+      <label for="amountUsed">Amount to Use:</label>
+      <input type="number" id="amountUsed" name="amountUsed" min="0.01" step="0.01" required>
+      <button onclick="submitUsageForm()">Log Usage</button>
+      <button onclick="closeUsageModal()">Cancel</button>
+    </div>
   </div>
 
-  <!-- Include script.html at the end of body -->
-  <script>
-    <?!= HtmlService.createHtmlOutputFromFile('script.html').getContent(); ?>
-  </script>
+<script>
+  // Utility to show loading spinner and messages
+  function showLoading(isLoading) {
+    document.getElementById('loading').style.display = isLoading ? 'block' : 'none';
+  }
+
+  function showMessage(message, isSuccess) {
+    var msgDiv = document.getElementById('statusMessage');
+    msgDiv.textContent = message;
+    msgDiv.className = 'message ' + (isSuccess ? 'success' : 'error');
+    msgDiv.style.display = 'block';
+    setTimeout(() => { msgDiv.style.display = 'none'; }, 5000); // Hide after 5 seconds
+  }
+
+  function toggleBalanceInput() {
+    document.getElementById('initialBalanceGroup').style.display =
+      document.getElementById('isGiftCertificate').checked ? 'block' : 'none';
+  }
+
+  function formatDate(dateObj) {
+    if (!dateObj) return '';
+    // Check if it's already a string that looks like a date (e.g., from date picker)
+    if (typeof dateObj === 'string') {
+        // Attempt to parse and reformat if it's not in YYYY-MM-DD
+        const d = new Date(dateObj);
+        if (!isNaN(d.getTime())) {
+             return d.toISOString().split('T')[0];
+        }
+        return dateObj; // Return as is if it's a string we can't parse well or already correct
+    }
+    // If it's a Date object from Apps Script (often comes as a complex object)
+    if (typeof dateObj === 'object' && dateObj.getTime) {
+       return dateObj.toISOString().split('T')[0];
+    }
+    // If it's from sheet (might be string or number representing date)
+    const d = new Date(dateObj);
+    return d.toISOString().split('T')[0];
+  }
+
+  function saveCouponForm() {
+    showLoading(true);
+    var barcode = document.getElementById('barcode').value;
+    var expiryDateInput = document.getElementById('expiryDate').value; // This will be yyyy-mm-dd
+    var isGift = document.getElementById('isGiftCertificate').checked;
+    var balance = document.getElementById('initialBalance').value;
+
+    if (!barcode || !expiryDateInput) {
+      showMessage("Barcode and Expiration Date are required.", false);
+      showLoading(false);
+      return;
+    }
+    if (isGift && (!balance || parseFloat(balance) < 0)) {
+        showMessage("Initial balance for gift certificate must be a non-negative number.", false);
+        showLoading(false);
+        return;
+    }
+
+    var couponData = {
+      barcode: barcode,
+      expiryDate: expiryDateInput, // Directly pass yyyy-mm-dd string
+      isGiftCertificate: isGift,
+      initialBalance: isGift ? parseFloat(balance) : null
+    };
+
+    google.script.run
+      .withSuccessHandler(function(response) {
+        showLoading(false);
+        showMessage(response, response.startsWith("Error:") ? false : true);
+        if (!response.startsWith("Error:")) {
+          document.getElementById('barcode').value = '';
+          document.getElementById('expiryDate').value = '';
+          document.getElementById('isGiftCertificate').checked = false;
+          document.getElementById('initialBalance').value = '';
+          toggleBalanceInput();
+          loadLatestCoupons();
+          loadAllCoupons(); // Refresh all coupons list too
+        }
+      })
+      .withFailureHandler(function(error) {
+        showLoading(false);
+        showMessage("Client-side error: " + error.message, false);
+      })
+      .saveCoupon(couponData);
+  }
+
+  function loadLatestCoupons() {
+    showLoading(true);
+    google.script.run
+      .withSuccessHandler(function(coupons) {
+        showLoading(false);
+        var listDiv = document.getElementById('latestCouponsList');
+        listDiv.innerHTML = ''; // Clear previous list
+        if (coupons && coupons.length > 0) {
+          var ul = document.createElement('ul');
+          coupons.forEach(function(coupon) {
+            var li = document.createElement('li');
+            var expiry = new Date(coupon.expiryDate);
+            var today = new Date();
+            today.setHours(0,0,0,0); // Normalize today's date
+
+            var text = coupon.barcode + " (Expires: " + formatDate(expiry) + ")";
+            if (coupon.isGiftCertificate) {
+              text += " - Balance: " + (coupon.balance !== null ? coupon.balance.toFixed(2) : 'N/A');
+            }
+            li.textContent = text;
+
+            if (expiry < today) {
+              li.classList.add('expired');
+            } else if ((expiry - today) / (1000 * 60 * 60 * 24) <= 7) {
+              li.classList.add('nearing-expiry');
+            }
+            ul.appendChild(li);
+          });
+          listDiv.appendChild(ul);
+        } else {
+          listDiv.textContent = "No recent coupons found.";
+        }
+      })
+      .withFailureHandler(function(error) {
+        showLoading(false);
+        showMessage("Error loading latest coupons: " + error.message, false);
+      })
+      .getLatestCoupons();
+  }
+
+  function loadAllCoupons() {
+    showLoading(true);
+    var filterStartDate = document.getElementById('filterStartDate').value;
+    var filterEndDate = document.getElementById('filterEndDate').value;
+
+    google.script.run
+      .withSuccessHandler(function(coupons) {
+        showLoading(false);
+        var tableBody = document.getElementById('allCouponsTable').getElementsByTagName('tbody')[0];
+        tableBody.innerHTML = ''; // Clear previous list
+
+        var filteredCoupons = coupons.filter(function(coupon) {
+            var entry = new Date(coupon.entryDate);
+            if (filterStartDate && entry < new Date(filterStartDate)) {
+                return false;
+            }
+            if (filterEndDate) {
+                let endDate = new Date(filterEndDate);
+                endDate.setHours(23,59,59,999); // Include the whole end day
+                if (entry > endDate) return false;
+            }
+            return true;
+        });
+
+
+        if (filteredCoupons && filteredCoupons.length > 0) {
+          filteredCoupons.forEach(function(coupon) {
+            var row = tableBody.insertRow();
+            row.insertCell().textContent = coupon.barcode;
+            row.insertCell().textContent = formatDate(new Date(coupon.entryDate));
+
+            var expiryCell = row.insertCell();
+            var expiryDate = new Date(coupon.expiryDate);
+            expiryCell.textContent = formatDate(expiryDate);
+
+            var today = new Date();
+            today.setHours(0,0,0,0); // Normalize today for comparison
+
+            if (expiryDate < today) {
+              row.classList.add('expired');
+            } else if ((expiryDate - today) / (1000 * 60 * 60 * 24) <= 7) { // Expires in 7 days or less
+              row.classList.add('nearing-expiry');
+            }
+
+            row.insertCell().textContent = coupon.isGiftCertificate ? 'Gift Certificate' : 'Regular';
+            row.insertCell().textContent = coupon.isGiftCertificate && coupon.originalAmount !== null ? coupon.originalAmount.toFixed(2) : 'N/A';
+            row.insertCell().textContent = coupon.isGiftCertificate && coupon.balance !== null ? coupon.balance.toFixed(2) : 'N/A';
+
+            var actionsCell = row.insertCell();
+            if (coupon.isGiftCertificate) {
+              var useButton = document.createElement('button');
+              useButton.textContent = 'Log Usage';
+              useButton.onclick = function() { openUsageModal(coupon.barcode, coupon.balance); };
+              actionsCell.appendChild(useButton);
+            }
+          });
+        } else {
+          var row = tableBody.insertRow();
+          var cell = row.insertCell();
+          cell.colSpan = 7; // Number of columns
+          cell.textContent = "No coupons found or matching filters.";
+          cell.style.textAlign = "center";
+        }
+      })
+      .withFailureHandler(function(error) {
+        showLoading(false);
+        showMessage("Error loading all coupons: " + error.message, false);
+      })
+      .getCoupons(); // We get all and filter client-side for now
+  }
+
+  function openUsageModal(barcode, currentBalance) {
+    document.getElementById('usageBarcode').value = barcode;
+    document.getElementById('amountUsed').value = '';
+    document.getElementById('amountUsed').max = currentBalance; // Set max based on balance
+    document.getElementById('usageModal').style.display = 'block';
+  }
+
+  function closeUsageModal() {
+    document.getElementById('usageModal').style.display = 'none';
+  }
+
+  function submitUsageForm() {
+    showLoading(true);
+    var barcode = document.getElementById('usageBarcode').value;
+    var amountUsed = parseFloat(document.getElementById('amountUsed').value);
+
+    if (isNaN(amountUsed) || amountUsed <= 0) {
+        showMessage("Please enter a valid positive amount to use.", false);
+        showLoading(false);
+        return;
+    }
+
+    google.script.run
+      .withSuccessHandler(function(response) {
+        showLoading(false);
+        if (response.success) {
+          showMessage(response.message, true);
+          closeUsageModal();
+          loadAllCoupons(); // Refresh the list to show updated balance
+          loadLatestCoupons(); // Also refresh latest if it might be there
+        } else {
+          showMessage(response.message, false);
+        }
+      })
+      .withFailureHandler(function(error) {
+        showLoading(false);
+        showMessage("Client-side error logging usage: " + error.message, false);
+      })
+      .logGiftCertificateUsage(barcode, amountUsed);
+  }
+
+  // Initial load
+  window.onload = function() {
+    // Use text input for date initially to allow placeholder, then change to date type on focus
+    document.getElementById('expiryDate').placeholder = 'yyyy-mm-dd';
+    document.getElementById('filterStartDate').placeholder = 'yyyy-mm-dd';
+    document.getElementById('filterEndDate').placeholder = 'yyyy-mm-dd';
+
+    loadLatestCoupons();
+    loadAllCoupons();
+    toggleBalanceInput(); // Ensure balance input is correctly hidden/shown initially
+  };
+</script>
 </body>
 </html>
