@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <title>Coupon Manager</title>
+  <!-- Include style.html and script.html later -->
+  <?!= HtmlService.createHtmlOutputFromFile('style.html').getContent(); ?>
+</head>
+<body>
+  <h1>Coupon Manager</h1>
+
+  <div id="userMessage" style="color: green; font-weight: bold;"></div>
+  <div id="errorMessage" style="color: red; font-weight: bold;"></div>
+
+  <h2>Add New Coupon</h2>
+  <form id="couponForm">
+    <div>
+      <label for="barcode">Barcode Number:</label>
+      <input type="text" id="barcode" name="barcode" required>
+    </div>
+    <div>
+      <label for="barcodeImage">Barcode Image (Optional):</label>
+      <input type="file" id="barcodeImage" name="barcodeImage" accept="image/*">
+      <img id="imagePreview" src="#" alt="Image Preview" style="max-width: 200px; max-height: 100px; display: none;"/>
+    </div>
+    <div>
+      <label for="inputDate">Input Date:</label>
+      <input type="date" id="inputDate" name="inputDate" required>
+    </div>
+    <div>
+      <label for="expiryDate">Expiry Date:</label>
+      <input type="date" id="expiryDate" name="expiryDate" required>
+    </div>
+    <div>
+      <label for="isMonetaryValue">Is Monetary Value Coupon?</label>
+      <input type="checkbox" id="isMonetaryValue" name="isMonetaryValue">
+    </div>
+    <div id="initialValueRow" style="display: none;">
+      <label for="initialValue">Initial Value (e.g., 50.00):</label>
+      <input type="number" id="initialValue" name="initialValue" step="0.01">
+    </div>
+    <div>
+      <label for="notes">Notes (Optional):</label>
+      <textarea id="notes" name="notes" rows="3"></textarea>
+    </div>
+    <div>
+      <button type="submit" id="saveCouponButton">Save Coupon</button>
+      <div id="loader" style="display: none;">Saving...</div>
+    </div>
+  </form>
+
+  <hr>
+
+  <h2>Expiring Soon</h2>
+  <div id="expiringCouponsList">
+    <p>Loading expiring coupons...</p>
+  </div>
+
+  <hr>
+
+  <h2>Recent Coupons (Last 5 Added)</h2>
+  <div id="recentCouponsList">
+    <p>Loading recent coupons...</p>
+  </div>
+
+  <hr>
+
+  <h2>All Coupons</h2>
+  <div>
+    <label for="filterDateType">Filter by:</label>
+    <select id="filterDateType">
+        <option value="InputDate">Input Date</option>
+        <option value="ExpiryDate">Expiry Date</option>
+    </select>
+    <label for="filterStartDate">From:</label>
+    <input type="date" id="filterStartDate">
+    <label for="filterEndDate">To:</label>
+    <input type="date" id="filterEndDate">
+    <button id="filterButton">Filter</button>
+    <button id="clearFilterButton">Clear Filter</button>
+  </div>
+  <div id="allCouponsList">
+    <p>Loading all coupons...</p>
+  </div>
+
+  <!-- Include script.html at the end of body -->
+  <?!= HtmlService.createHtmlOutputFromFile('script.html').getContent(); ?>
+</body>
+</html>

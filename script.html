@@ -1,0 +1,377 @@
+<script>
+// Global variable to store image base64 data
+var barcodeImageBase64 = null;
+
+document.addEventListener('DOMContentLoaded', function() {
+  // Set default input date to today
+  document.getElementById('inputDate').valueAsDate = new Date();
+
+  // Event listener for the main coupon form
+  document.getElementById('couponForm').addEventListener('submit', handleFormSubmit);
+
+  // Event listener for checkbox to show/hide initial value
+  document.getElementById('isMonetaryValue').addEventListener('change', toggleInitialValueRow);
+
+  // Event listener for file input to preview image
+  document.getElementById('barcodeImage').addEventListener('change', previewImage);
+
+  // Event listeners for filter buttons
+  document.getElementById('filterButton').addEventListener('click', applyFilters);
+  document.getElementById('clearFilterButton').addEventListener('click', clearFiltersAndLoadAllCoupons);
+
+  // Initial data load
+  loadInitialData();
+});
+
+function showMessage(message, isError = false) {
+  var messageEl = document.getElementById(isError ? 'errorMessage' : 'userMessage');
+  var otherMessageEl = document.getElementById(isError ? 'userMessage' : 'errorMessage');
+
+  messageEl.textContent = message;
+  messageEl.style.display = 'block';
+  otherMessageEl.style.display = 'none'; // Hide the other message type
+
+  // Clear message after some time
+  setTimeout(() => {
+    messageEl.style.display = 'none';
+    messageEl.textContent = '';
+  }, 5000); // Hide after 5 seconds
+}
+
+function toggleInitialValueRow() {
+  var initialValueRow = document.getElementById('initialValueRow');
+  initialValueRow.style.display = this.checked ? 'block' : 'none';
+  if (!this.checked) {
+    document.getElementById('initialValue').value = ''; // Clear value if unchecked
+  }
+}
+
+function previewImage(event) {
+  var reader = new FileReader();
+  var imagePreview = document.getElementById('imagePreview');
+  reader.onload = function(){
+    imagePreview.src = reader.result;
+    imagePreview.style.display = 'block';
+    barcodeImageBase64 = reader.result; // Store base64 string
+  };
+  if (event.target.files[0]) {
+    reader.readAsDataURL(event.target.files[0]);
+  } else {
+    imagePreview.src = '#';
+    imagePreview.style.display = 'none';
+    barcodeImageBase64 = null;
+  }
+}
+
+function showLoader(show) {
+  document.getElementById('loader').style.display = show ? 'inline-block' : 'none';
+  document.getElementById('saveCouponButton').disabled = show;
+}
+
+function loadInitialData() {
+  showLoader(true); // Show loader while initial data loads
+  google.script.run
+    .withSuccessHandler(displayRecentCoupons)
+    .withFailureHandler(handleError)
+    .getRecentCoupons();
+
+  google.script.run
+    .withSuccessHandler(displayExpiringCoupons)
+    .withFailureHandler(handleError)
+    .getExpiringCoupons(7); // Get coupons expiring in next 7 days
+
+  google.script.run
+    .withSuccessHandler(function(coupons) {
+        displayAllCoupons(coupons);
+        showLoader(false); // Hide loader after all initial data is loaded
+    })
+    .withFailureHandler(function(error) {
+        handleError(error);
+        showLoader(false); // Hide loader even if there's an error
+    })
+    .getCoupons();
+}
+
+function handleError(error) {
+  console.error('Error from Apps Script:', error);
+  showMessage('Error: ' + (error.message || error), true);
+  showLoader(false); // Ensure loader is hidden on error
+}
+
+function formatDateForDisplay(dateString) {
+    if (!dateString) return 'N/A';
+    // Assuming dateString is "YYYY-MM-DD" or a Date object
+    const date = new Date(dateString);
+    // Adjust for timezone offset to display the correct local date if it's a full ISO string
+    // For "YYYY-MM-DD", this adjustment might not be strictly needed but doesn't hurt.
+    const userTimezoneOffset = date.getTimezoneOffset() * 60000;
+    return new Date(date.getTime() + userTimezoneOffset).toLocaleDateString();
+}
+
+
+function renderCouponItem(coupon) {
+  var itemDiv = document.createElement('div');
+  itemDiv.classList.add('coupon-item');
+  itemDiv.id = 'coupon-' + coupon.Barcode; // ID for easy update later
+
+  var today = new Date();
+  today.setHours(0,0,0,0);
+  var expiryDate = new Date(coupon.ExpiryDate);
+  expiryDate.setHours(0,0,0,0); // Normalize for comparison
+
+  if (expiryDate < today) {
+    itemDiv.classList.add('expired');
+  } else {
+    var sevenDaysFromNow = new Date(today);
+    sevenDaysFromNow.setDate(today.getDate() + 7);
+    if (expiryDate <= sevenDaysFromNow) {
+      itemDiv.classList.add('expiring-soon');
+    }
+  }
+
+  var content = '<p><strong class="barcode">Barcode:</strong> ' + coupon.Barcode + '</p>' +
+                '<p><strong>Input Date:</strong> ' + formatDateForDisplay(coupon.InputDate) + '</p>' +
+                '<p><strong>Expiry Date:</strong> ' + formatDateForDisplay(coupon.ExpiryDate) + '</p>' +
+                '<p><strong>Monetary:</strong> ' + (coupon.IsMonetaryValue ? 'Yes' : 'No') + '</p>';
+
+  if (coupon.IsMonetaryValue) {
+    content += '<div class="monetary-details">' +
+               '<p><strong>Initial Value:</strong> ' + (coupon.InitialValue !== undefined && coupon.InitialValue !== null ? coupon.InitialValue.toFixed(2) : '0.00') + '</p>' +
+               '<p><strong>Current Balance:</strong> <span id="balance-' + coupon.Barcode + '">' + (coupon.CurrentBalance !== undefined && coupon.CurrentBalance !== null ? coupon.CurrentBalance.toFixed(2) : '0.00') + '</span></p>';
+
+    // Add usage section only if not expired
+    if (expiryDate >= today) {
+         content += '<label for="useAmount-' + coupon.Barcode + '">Use Amount:</label>' +
+                    '<input type="number" id="useAmount-' + coupon.Barcode + '" step="0.01" placeholder="0.00">' +
+                    '<button onclick="handleUseCoupon(\'' + coupon.Barcode + '\')">Use</button>';
+    } else {
+        content += '<p><em>Cannot use expired coupon.</em></p>';
+    }
+    content += '</div>';
+  }
+
+  if (coupon.ImageFileName) {
+    // Note: Displaying Drive images directly can be complex due to permissions.
+    // For simplicity, we're just showing the filename.
+    // A more advanced solution might involve a servlet or public image URLs.
+    content += '<p><strong>Image:</strong> ' + coupon.ImageFileName + '</p>';
+  }
+  if (coupon.Notes) {
+    content += '<p class="notes"><strong>Notes:</strong> ' + coupon.Notes + '</p>';
+  }
+
+  itemDiv.innerHTML = content;
+  return itemDiv;
+}
+
+function displayRecentCoupons(coupons) {
+  var listDiv = document.getElementById('recentCouponsList');
+  listDiv.innerHTML = ''; // Clear previous content
+  if (coupons && coupons.length > 0) {
+    coupons.forEach(coupon => {
+      listDiv.appendChild(renderCouponItem(coupon));
+    });
+  } else {
+    listDiv.innerHTML = '<p>No recent coupons found.</p>';
+  }
+}
+
+function displayExpiringCoupons(coupons) {
+  var listDiv = document.getElementById('expiringCouponsList');
+  listDiv.innerHTML = ''; // Clear previous content
+  if (coupons && coupons.length > 0) {
+    coupons.forEach(coupon => {
+      listDiv.appendChild(renderCouponItem(coupon));
+    });
+  } else {
+    listDiv.innerHTML = '<p>No coupons expiring soon.</p>';
+  }
+}
+
+function displayAllCoupons(coupons) {
+  var listDiv = document.getElementById('allCouponsList');
+  listDiv.innerHTML = ''; // Clear previous content
+  if (coupons && coupons.length > 0) {
+    coupons.forEach(coupon => {
+      listDiv.appendChild(renderCouponItem(coupon));
+    });
+  } else {
+    listDiv.innerHTML = '<p>No coupons found. Try adding some!</p>';
+  }
+}
+
+// Part 2 will include handleFormSubmit, handleUseCoupon, applyFilters etc.
+// Make sure this is appended INSIDE the existing <script> tag in script.html
+
+function handleFormSubmit(event) {
+  event.preventDefault(); // Prevent default form submission
+  showLoader(true);
+  showMessage(''); // Clear previous messages
+
+  var form = event.target;
+  var barcode = form.barcode.value.trim();
+  var inputDate = form.inputDate.value;
+  var expiryDate = form.expiryDate.value;
+  var isMonetaryValue = form.isMonetaryValue.checked;
+  var initialValue = form.initialValue.value ? parseFloat(form.initialValue.value) : 0;
+  var notes = form.notes.value.trim();
+
+  if (!barcode || !inputDate || !expiryDate) {
+    showMessage("Barcode, Input Date, and Expiry Date are required.", true);
+    showLoader(false);
+    return;
+  }
+  if (isMonetaryValue && initialValue <= 0) {
+    showMessage("Initial Value must be greater than 0 for monetary coupons.", true);
+    showLoader(false);
+    return;
+  }
+   if (new Date(expiryDate) < new Date(inputDate)) {
+    showMessage("Expiry Date cannot be before Input Date.", true);
+    showLoader(false);
+    return;
+  }
+
+  // If there's an image to upload
+  if (barcodeImageBase64 && document.getElementById('barcodeImage').files[0]) {
+    var originalFileName = document.getElementById('barcodeImage').files[0].name;
+    google.script.run
+      .withSuccessHandler(function(fileInfo) {
+        if (fileInfo && fileInfo.error) {
+          handleError("Image upload failed: " + fileInfo.error);
+          showLoader(false);
+        } else if (fileInfo && fileInfo.fileName) {
+          // Now save coupon data with the image filename
+          saveCouponWithData(barcode, inputDate, expiryDate, isMonetaryValue, initialValue, fileInfo.fileName, notes);
+        } else {
+          handleError("Image upload failed: No file info returned.");
+          showLoader(false);
+        }
+      })
+      .withFailureHandler(function(error) {
+          handleError(error);
+          showLoader(false);
+      })
+      .uploadBarcodeImage(barcodeImageBase64, originalFileName);
+  } else {
+    // Save coupon data without an image
+    saveCouponWithData(barcode, inputDate, expiryDate, isMonetaryValue, initialValue, "", notes);
+  }
+}
+
+function saveCouponWithData(barcode, inputDate, expiryDate, isMonetaryValue, initialValue, imageFileName, notes) {
+  google.script.run
+    .withSuccessHandler(function(response) {
+      showMessage(response, false); // Show success message from server
+      showLoader(false);
+      document.getElementById('couponForm').reset(); // Reset the form
+      document.getElementById('imagePreview').style.display = 'none'; // Hide preview
+      barcodeImageBase64 = null; // Clear stored base64
+      toggleInitialValueRow.call({checked: false}); // Hide monetary field again
+      document.getElementById('inputDate').valueAsDate = new Date(); // Reset date
+
+      // Refresh lists
+      loadInitialData();
+    })
+    .withFailureHandler(function(error) {
+        handleError(error);
+        showLoader(false);
+    })
+    .saveCouponData(barcode, inputDate, expiryDate, isMonetaryValue, initialValue, imageFileName, notes);
+}
+
+function handleUseCoupon(barcode) {
+  if (!barcode) {
+    showMessage('Barcode not provided for usage.', true);
+    return;
+  }
+  var amountInput = document.getElementById('useAmount-' + barcode);
+  if (!amountInput) {
+      showMessage('Could not find amount input for barcode: ' + barcode, true);
+      return;
+  }
+  var amountToUse = parseFloat(amountInput.value);
+
+  if (isNaN(amountToUse) || amountToUse <= 0) {
+    showMessage('Please enter a valid positive amount to use.', true);
+    return;
+  }
+
+  showLoader(true); // You might want a more specific loader for this action
+
+  google.script.run
+    .withSuccessHandler(function(response) {
+      showLoader(false);
+      if (response.error) {
+        showMessage(response.error, true);
+      } else {
+        showMessage(response.success || 'Coupon usage processed.', false);
+        // Update the balance in the UI
+        var balanceSpan = document.getElementById('balance-' + response.barcode);
+        if (balanceSpan) {
+          balanceSpan.textContent = response.newBalance.toFixed(2);
+        }
+        amountInput.value = ''; // Clear the input field
+
+        // Optionally, refresh all lists or just the specific item if needed
+        // For simplicity, a full refresh ensures data consistency
+        loadInitialData();
+      }
+    })
+    .withFailureHandler(function(error) {
+        handleError(error);
+        showLoader(false);
+    })
+    .logCouponUsage(barcode, amountToUse);
+}
+
+function applyFilters() {
+  var dateType = document.getElementById('filterDateType').value;
+  var startDate = document.getElementById('filterStartDate').value;
+  var endDate = document.getElementById('filterEndDate').value;
+
+  if (!startDate || !endDate) {
+    showMessage('Please select both a start and end date for filtering.', true);
+    return;
+  }
+  if (new Date(endDate) < new Date(startDate)) {
+    showMessage('End date cannot be before start date.', true);
+    return;
+  }
+
+  showLoader(true); // Show a general loader or one specific to the all coupons list
+  google.script.run
+    .withSuccessHandler(function(filteredCoupons){
+        displayAllCoupons(filteredCoupons);
+        if(filteredCoupons.length === 0){
+            showMessage('No coupons found for the selected filter criteria.', false);
+        }
+        showLoader(false);
+    })
+    .withFailureHandler(function(error){
+        handleError(error);
+        showLoader(false);
+    })
+    .filterCouponsByDateRange(startDate, endDate, dateType);
+}
+
+function clearFiltersAndLoadAllCoupons() {
+  document.getElementById('filterStartDate').value = '';
+  document.getElementById('filterEndDate').value = '';
+  // document.getElementById('filterDateType').selectedIndex = 0; // Reset dropdown to first option
+
+  showLoader(true);
+  google.script.run
+    .withSuccessHandler(function(allCoupons){
+        displayAllCoupons(allCoupons);
+        showLoader(false);
+    })
+    .withFailureHandler(function(error){
+        handleError(error);
+        showLoader(false);
+    })
+    .getCoupons(); // Fetch all coupons
+}
+
+// Ensure this is the end of your JavaScript, right before the closing </script> tag
+</script>
