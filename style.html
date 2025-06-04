@@ -1,0 +1,177 @@
+body {
+  font-family: Arial, sans-serif;
+  margin: 20px;
+  background-color: #f4f4f4;
+  color: #333;
+}
+
+h1, h2 {
+  color: #333;
+  border-bottom: 1px solid #ccc;
+  padding-bottom: 10px;
+}
+
+form div {
+  margin-bottom: 15px;
+}
+
+label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+input[type="text"],
+input[type="date"],
+input[type="number"],
+textarea,
+select {
+  width: calc(100% - 22px); /* Full width minus padding and border */
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  box-sizing: border-box; /* Important for width calculation */
+}
+
+input[type="checkbox"] {
+  margin-right: 5px;
+  vertical-align: middle;
+}
+
+button {
+  background-color: #007bff;
+  color: white;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+#saveCouponButton {
+  margin-right: 10px;
+}
+
+#loader {
+  display: inline-block; /* Keeps it on the same line as button */
+  margin-left: 10px;
+  font-style: italic;
+}
+
+hr {
+  margin-top: 30px;
+  margin-bottom: 30px;
+  border: 0;
+  border-top: 1px solid #ccc;
+}
+
+#expiringCouponsList .coupon-item.expiring-soon,
+#allCouponsList .coupon-item.expiring-soon {
+  background-color: #fff3cd; /* Light yellow for expiring */
+  border-left: 5px solid #ffc107; /* Yellow accent */
+  padding: 10px;
+  margin-bottom:5px;
+}
+
+#expiringCouponsList .coupon-item.expired,
+#allCouponsList .coupon-item.expired {
+  background-color: #f8d7da; /* Light red for expired */
+  border-left: 5px solid #dc3545; /* Red accent */
+  text-decoration: line-through;
+  padding: 10px;
+  margin-bottom:5px;
+}
+
+
+.coupon-item {
+  background-color: #fff;
+  border: 1px solid #ddd;
+  padding: 15px;
+  margin-bottom: 10px;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.coupon-item p {
+  margin: 5px 0;
+}
+
+.coupon-item strong {
+  color: #555;
+}
+
+.coupon-item .barcode {
+  font-weight: bold;
+  font-size: 1.1em;
+  color: #007bff;
+}
+
+.coupon-item .notes {
+  font-style: italic;
+  font-size: 0.9em;
+  color: #666;
+}
+
+.coupon-item .monetary-details {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed #eee;
+}
+
+.coupon-item .monetary-details input[type="number"] {
+  width: 80px;
+  padding: 5px;
+  margin-right: 5px;
+  display: inline-block; /* allow button next to it */
+}
+
+.coupon-item .monetary-details button {
+  padding: 5px 10px;
+  font-size: 0.9em;
+  background-color: #28a745; /* Green for use button */
+}
+.coupon-item .monetary-details button:hover {
+  background-color: #1e7e34;
+}
+
+#userMessage, #errorMessage {
+  padding: 10px;
+  margin-bottom: 15px;
+  border-radius: 4px;
+  font-weight: bold;
+}
+
+#userMessage {
+  background-color: #d4edda; /* Light green */
+  color: #155724; /* Dark green */
+  border: 1px solid #c3e6cb;
+}
+
+#errorMessage {
+  background-color: #f8d7da; /* Light red */
+  color: #721c24; /* Dark red */
+  border: 1px solid #f5c6cb;
+}
+
+/* Basic responsive adjustments */
+@media (max-width: 600px) {
+  input[type="text"],
+  input[type="date"],
+  input[type="number"],
+  textarea,
+  select {
+    width: 100%; /* Full width on smaller screens */
+  }
+
+  button {
+    width: 100%;
+    margin-top: 5px;
+  }
+  #saveCouponButton {
+    margin-right: 0;
+  }
+}
