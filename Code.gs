@@ -102,7 +102,8 @@ function getUsageHistory(barcodeForFilter) {
       
       // 바코드 필터링 (제공된 경우)
       // 시트의 바코드는 이미 정규화되어 저장된 것으로 가정 (logGiftCertificateUsage에서 처리)
-      if (normalizedFilterBarcode && row[colIndices["Barcode"]] !== normalizedFilterBarcode) {
+      if (normalizedFilterBarcode) { Logger.log("Filtering comparison: sheetBarcode='" + row[colIndices["Barcode"]] + "' (type: " + typeof row[colIndices["Barcode"]] + "), filterBarcode='" + normalizedFilterBarcode + "' (type: " + typeof normalizedFilterBarcode + ")"); }
+      if (normalizedFilterBarcode && String(row[colIndices["Barcode"]]) !== normalizedFilterBarcode) {
         continue;
       }
 
