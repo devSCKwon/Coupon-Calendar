@@ -55,6 +55,86 @@ function uploadImageToDrive(base64ImageData, imageName, mimeType) {
 }
 
 /**
+ * 지정된 바코드에 대한 쿠폰 사용 내역을 가져옵니다.
+ * @param {string} barcodeForFilter 필터링할 바코드 (선택 사항). 제공되면 해당 바코드의 내역만 반환합니다.
+ * @return {string} 사용 내역 객체 배열의 JSON 문자열. 각 객체는 {timestamp: string, barcode: string, amountUsed: number, newBalance: number} 형태를 가집니다.
+ *                  오류 발생 시 { error: string } 형태의 객체를 JSON 문자열로 반환할 수 있습니다.
+ */
+function getUsageHistory(barcodeForFilter) {
+  try {
+    var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    var sheet = ss.getSheetByName(USAGE_LOG_SHEET_NAME);
+
+    if (!sheet) {
+      Logger.log("getUsageHistory: 사용 기록 시트 ('" + USAGE_LOG_SHEET_NAME + "')를 찾을 수 없습니다.");
+      return JSON.stringify([]); // 시트가 없으면 빈 배열 반환
+    }
+
+    if (sheet.getLastRow() <= 1) { // 헤더만 있거나 데이터가 없는 경우
+      Logger.log("getUsageHistory: 사용 기록 시트에 데이터가 없습니다.");
+      return JSON.stringify([]); // 데이터가 없으면 빈 배열 반환
+    }
+
+    var data = sheet.getDataRange().getValues();
+    var headers = data[0];
+    var expectedHeaders = ["Timestamp", "Barcode", "Amount Used", "New Balance"];
+
+    // 헤더 인덱스 매핑
+    var colIndices = {};
+    for (var i = 0; i < expectedHeaders.length; i++) {
+      var headerIndex = headers.indexOf(expectedHeaders[i]);
+      if (headerIndex === -1) {
+        Logger.log("getUsageHistory 오류: 필수 헤더 '" + expectedHeaders[i] + "'를 찾을 수 없습니다.");
+        return JSON.stringify({ error: "사용 기록 시트의 헤더 구성이 올바르지 않습니다. 누락된 헤더: " + expectedHeaders[i] });
+      }
+      colIndices[expectedHeaders[i]] = headerIndex;
+    }
+
+    var historyRecords = [];
+    var normalizedFilterBarcode = null;
+    if (barcodeForFilter && String(barcodeForFilter).trim() !== "") {
+      normalizedFilterBarcode = String(barcodeForFilter).replace(/\D/g, "");
+    }
+
+    // 데이터는 1번 인덱스부터 시작 (0번 인덱스는 헤더)
+    for (var i = 1; i < data.length; i++) {
+      var row = data[i];
+      
+      // 바코드 필터링 (제공된 경우)
+      // 시트의 바코드는 이미 정규화되어 저장된 것으로 가정 (logGiftCertificateUsage에서 처리)
+      if (normalizedFilterBarcode && row[colIndices["Barcode"]] !== normalizedFilterBarcode) {
+        continue;
+      }
+
+      var timestamp = row[colIndices["Timestamp"]];
+      // 날짜/시간 객체인 경우 ISO 문자열로 변환, 그렇지 않으면 그대로 사용 (이미 문자열일 수 있음)
+      var timestampStr = (timestamp instanceof Date) ? timestamp.toISOString() : timestamp;
+      
+      historyRecords.push({
+        timestamp: timestampStr,
+        barcode: row[colIndices["Barcode"]],
+        amountUsed: parseFloat(row[colIndices["Amount Used"]]), // 숫자형으로 변환
+        newBalance: parseFloat(row[colIndices["New Balance"]])  // 숫자형으로 변환
+      });
+    }
+
+    // Timestamp 기준으로 내림차순 정렬 (최신 기록이 위로)
+    historyRecords.sort(function(a, b) {
+      var dateA = new Date(a.timestamp);
+      var dateB = new Date(b.timestamp);
+      return dateB - dateA; // 내림차순
+    });
+    
+    Logger.log("getUsageHistory: " + historyRecords.length + "개의 기록을 반환합니다. 필터 바코드: " + (normalizedFilterBarcode || "없음"));
+    return JSON.stringify(historyRecords);
+
+  } catch (e) {
+    Logger.log("getUsageHistory 함수 오류: " + e.toString() + " 스택: " + e.stack);
+    return JSON.stringify({ error: "사용 내역 조회 중 오류 발생: " + e.toString() });
+  }
+}
+
+/**
  * 새 쿠폰을 스프레드시트에 저장합니다. 바코드 정규화 및 유일성 검사를 포함합니다.
  * @param {Object} couponData 쿠폰 상세 정보 객체
  * @return {string} JSON 문자열 형태의 성공 또는 오류 메시지 객체.
@@ -388,6 +468,131 @@ function logGiftCertificateUsage(barcode, amountUsed) {
     return JSON.stringify({ success: false, message: "사용 내역 기록 중 오류 발생: " + e.toString() });
   }
 }
+
+/**
+ * 대시보드 통계 정보를 계산하여 반환합니다.
+ * @return {String} 통계 정보를 담은 객체의 JSON 문자열.
+ *                   { totalCoupons: number, availableCoupons: number, expiringSoonCoupons: number, totalGiftCertificateBalance: number }
+ */
+function getDashboardStats() {
+  try {
+    var sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(COUPON_SHEET_NAME);
+    if (!sheet || sheet.getLastRow() <= 1) { // 헤더만 있거나 시트가 없는 경우
+      Logger.log("getDashboardStats: 쿠폰 시트가 비어있거나 찾을 수 없습니다.");
+      return JSON.stringify({ totalCoupons: 0, availableCoupons: 0, expiringSoonCoupons: 0, totalGiftCertificateBalance: 0 });
+    }
+
+    var data = sheet.getDataRange().getValues();
+    var headers = data[0];
+    
+    // 헤더 인덱스 찾기 - 실제 열 이름과 일치해야 함
+    var expiryDateIdx = headers.indexOf("만료일");
+    var isGiftCertIdx = headers.indexOf("금액권 여부");
+    var balanceIdx = headers.indexOf("잔액");
+    var isUsedIdx = headers.indexOf("사용 완료"); // "사용 완료" 열
+    var expiryStatusIdx = headers.indexOf("만료 상태"); // "만료 상태" 열
+
+    if (expiryDateIdx === -1 || isGiftCertIdx === -1 || balanceIdx === -1 || isUsedIdx === -1 || expiryStatusIdx === -1) {
+      Logger.log("getDashboardStats 오류: 필요한 열 헤더 중 일부를 찾을 수 없습니다. (" + 
+                 "만료일: " + expiryDateIdx + ", 금액권 여부: " + isGiftCertIdx + ", 잔액: " + balanceIdx + 
+                 ", 사용 완료: " + isUsedIdx + ", 만료 상태: " + expiryStatusIdx + ")");
+      // 오류 발생 시 기본값 반환 또는 오류 객체 반환 고려
+      return JSON.stringify({ error: "시트 헤더 구성이 올바르지 않습니다.", totalCoupons: 0, availableCoupons: 0, expiringSoonCoupons: 0, totalGiftCertificateBalance: 0 });
+    }
+
+    var totalCoupons = 0;
+    var availableCoupons = 0;
+    var expiringSoonCoupons = 0;
+    var totalGiftCertificateBalance = 0;
+
+    var today = new Date();
+    today.setHours(0, 0, 0, 0); // 날짜 비교를 위해 시간 부분 초기화
+
+    var sevenDaysFromNow = new Date();
+    sevenDaysFromNow.setDate(today.getDate() + 7);
+    sevenDaysFromNow.setHours(0,0,0,0);
+
+    // 데이터는 1번 인덱스부터 시작 (0번 인덱스는 헤더)
+    for (var i = 1; i < data.length; i++) {
+      var row = data[i];
+      if (!row || row[0] === "") continue; // 빈 행이나 바코드 없는 행은 건너뛰기
+
+      totalCoupons++;
+
+      var expiryDateStr = row[expiryDateIdx];
+      var isGiftCertificate = row[isGiftCertIdx]; // boolean 또는 문자열 'true'/'false'
+      var balance = parseFloat(row[balanceIdx]);
+      var isUsed = row[isUsedIdx]; // boolean 또는 문자열 'true'/'false'
+      var currentExpiryStatus = row[expiryStatusIdx]; // 문자열, 예: "사용가능", "만료됨", "사용완료"
+
+      // isUsed와 isGiftCertificate가 문자열일 수 있으므로 boolean으로 변환
+      var isUsedBool = (String(isUsed).toLowerCase() === 'true');
+      var isGiftCertBool = (String(isGiftCertificate).toLowerCase() === 'true');
+      
+      var expiryDate = new Date(expiryDateStr);
+      expiryDate.setHours(0,0,0,0); // 날짜 비교를 위해 시간 부분 초기화
+
+      var isActuallyAvailable = false;
+
+      // 1. 만료되지 않았는지 (만료일 > 오늘)
+      if (expiryDate > today) {
+        // 2. "사용 완료" 상태가 아닌지
+        if (!isUsedBool) {
+          // 3. "만료 상태" 필드가 "사용가능" 또는 유사한 긍정적 상태인지 (추가적인 안전장치)
+          //    (만료 상태가 "만료됨"으로 이미 표시된 경우는 제외)
+          if (currentExpiryStatus !== "만료됨" && currentExpiryStatus !== "사용완료" && currentExpiryStatus !== "잔액없음") {
+             // 4. 금액권의 경우 잔액이 0보다 큰지
+            if (isGiftCertBool) {
+              if (!isNaN(balance) && balance > 0) {
+                isActuallyAvailable = true;
+              }
+            } else { // 일반 쿠폰
+              isActuallyAvailable = true;
+            }
+          }
+        }
+      }
+
+
+      if (isActuallyAvailable) {
+        availableCoupons++;
+
+        // 만료 예정 쿠폰 (사용 가능하면서 7일 이내 만료)
+        if (expiryDate <= sevenDaysFromNow) {
+          expiringSoonCoupons++;
+        }
+
+        // 사용 가능한 금액권의 총 잔액 합산
+        if (isGiftCertBool) {
+          if (!isNaN(balance)) { // 이미 balance > 0 조건은 isActuallyAvailable에서 확인됨
+             totalGiftCertificateBalance += balance;
+          }
+        }
+      }
+    }
+
+    Logger.log("대시보드 통계: 총 쿠폰=" + totalCoupons + ", 사용 가능=" + availableCoupons + 
+               ", 만료 예정=" + expiringSoonCoupons + ", 총 잔액=" + totalGiftCertificateBalance);
+
+    return JSON.stringify({
+      totalCoupons: totalCoupons,
+      availableCoupons: availableCoupons,
+      expiringSoonCoupons: expiringSoonCoupons,
+      totalGiftCertificateBalance: totalGiftCertificateBalance.toFixed(2) // 소수점 2자리로 포맷
+    });
+
+  } catch (e) {
+    Logger.log("getDashboardStats 함수 오류: " + e.toString() + " 스택: " + e.stack);
+    return JSON.stringify({ 
+      error: "통계 계산 중 오류 발생: " + e.toString(),
+      totalCoupons: 0, 
+      availableCoupons: 0, 
+      expiringSoonCoupons: 0, 
+      totalGiftCertificateBalance: 0 
+    });
+  }
+}
+
 
 // 테스트용 헬퍼 함수
 function testSaveCoupon() {

@@ -461,9 +461,22 @@
                 </div>
             </div>
             <div class="tab-pane fade custom-section-container" id="usageHistorySection" role="tabpanel" aria-labelledby="navUsageHistory-tab">
-                <div class="text-center p-md-4">
-                    <h2 class="mb-3"><i class="bi bi-tools text-secondary me-2"></i>사용 히스토리</h2>
-                    <p class="lead">이 기능은 현재 준비 중입니다.</p>
+                <h2 class="mb-3"><i class="bi bi-clock-history text-secondary me-2"></i>쿠폰 사용 히스토리</h2>
+                <div class="table-responsive">
+                    <table id="usageHistoryTable" class="table table-striped table-hover table-sm caption-top">
+                        <caption>쿠폰 사용 상세 내역</caption>
+                        <thead class="table-light">
+                            <tr>
+                                <th>시간</th>
+                                <th>바코드</th>
+                                <th>사용 금액</th>
+                                <th>처리 후 잔액</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- 사용 내역이 여기에 로드됩니다 -->
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
@@ -717,7 +730,7 @@
                 if (saveResponse.success) {
                     openNewCouponModal();
                     closeNewCouponModal();
-                    loadAllCoupons();
+                    loadAllCoupons(); // This will call updateDashboard in its success handler
                 }
             } catch (parseErr) {
                 console.error("Save Coupon Parse Err:", parseErr, saveResponseString);
@@ -750,6 +763,7 @@
             cell.colSpan = 10;
             cell.textContent = "오류: 서버로부터 잘못된 형식의 데이터가 수신되었습니다.";
             cell.style.textAlign = "center";
+            updateDashboard(); // Update dashboard even on this error path
             return;
           }
           var allCoupons = JSON.parse(jsonStringResponse);
@@ -780,7 +794,44 @@
               if (!coupon || typeof coupon !== 'object') return;
               var row = tableBody.insertRow();
 
-              row.insertCell().textContent = coupon.barcode;
+              // Barcode cell - now a clickable link
+              var barcodeCell = row.insertCell();
+              var barcodeLink = document.createElement('a');
+              barcodeLink.href = "javascript:void(0);";
+              barcodeLink.textContent = coupon.barcode;
+              barcodeLink.style.cursor = "pointer";
+              barcodeLink.style.textDecoration = "underline";
+              barcodeLink.onclick = function(event) {
+                  event.preventDefault();
+                  
+                  // Programmatically switch to the "사용 히스토리" tab
+                  var historyTabButton = document.getElementById('navUsageHistory-tab');
+                  var historyPane = document.getElementById('usageHistorySection');
+                  
+                  // Deactivate other tabs/panes
+                  document.querySelectorAll('#mainNavigation .nav-link.active').forEach(function(activeLink) {
+                      activeLink.classList.remove('active');
+                      activeLink.setAttribute('aria-selected', 'false');
+                  });
+                  document.querySelectorAll('#mainTabContent .tab-pane.show.active').forEach(function(activePane) {
+                      activePane.classList.remove('show', 'active');
+                  });
+
+                  // Activate history tab/pane
+                  if (historyTabButton) {
+                      historyTabButton.classList.add('active');
+                      historyTabButton.setAttribute('aria-selected', 'true');
+                  }
+                  if (historyPane) {
+                      historyPane.classList.add('show', 'active');
+                  }
+                  
+                  // Load history for the clicked barcode
+                  // Ensure coupon.barcode is the normalized version if that's what getUsageHistory expects
+                  loadUsageHistory(coupon.barcode); 
+              };
+              barcodeCell.appendChild(barcodeLink);
+
               row.insertCell().textContent = formatDate(new Date(coupon.entryDate));
 
               var expiryCell = row.insertCell();
@@ -858,10 +909,12 @@
           cell.style.textAlign = "center";
           showMessage("쿠폰 목록 파싱 중 오류: " + e.message, false);
         }
+        updateDashboard(); // Call after processing all coupons or if try block failed
       })
       .withFailureHandler(function(error) {
         showLoading(false);
         showMessage("전체 쿠폰 로딩 중 오류: " + error.message, false);
+        updateDashboard(); // Also update dashboard on failure to reflect error state or clear old data
       })
       .getCoupons();
   }
@@ -892,7 +945,7 @@
           showMessage(response.message, response.success);
           if (response.success) {
             closeGeneralCouponUsageModal();
-            loadAllCoupons();
+            loadAllCoupons(); // This will call updateDashboard in its success handler
           }
         } catch (e) {
           console.error("submitMarkAsUsed JSON.parse error:", e, "Original response:", responseString);
@@ -943,7 +996,7 @@
           if (response.success) {
             showMessage(response.message, true);
             closeUsageModal();
-            loadAllCoupons();
+            loadAllCoupons(); // This will call updateDashboard in its success handler
           } else {
             showMessage(response.message, false);
           }
@@ -1019,6 +1072,10 @@
                       const targetPane = document.querySelector(targetPaneId);
                       if (targetPane) {
                           targetPane.classList.add('show', 'active');
+                           // 만약 활성화된 탭이 사용 히스토리 탭이면, 히스토리 로드
+                          if (targetPaneId === '#usageHistorySection') {
+                            loadUsageHistory(null); // 전체 히스토리 로드
+                          }
                       }
                   }
               }
@@ -1036,6 +1093,12 @@
               if (targetPane && !targetPane.classList.contains('show')) {
                   tabPanes.forEach(pane => pane.classList.remove('show', 'active'));
                   targetPane.classList.add('show', 'active');
+              }
+              // 기본 활성 탭이 사용 히스토리 탭인 경우에도 로드
+              if (targetPaneId === '#usageHistorySection' && (!targetPane || !targetPane.classList.contains('show'))) {
+                 // loadUsageHistory(null); // This might be too early if tab content isn't fully ready
+              } else if (targetPaneId === '#usageHistorySection' && targetPane && targetPane.classList.contains('show')) {
+                 loadUsageHistory(null);
               }
           }
       }
@@ -1096,8 +1159,147 @@
         });
     }
 
-    loadAllCoupons();
+    loadAllCoupons(); // This will also trigger updateDashboard via its success handler
+    updateDashboard(); // Initial dashboard load
+
+    // Check if the initial active tab is the usage history tab and load its content.
+    // This is a bit redundant with the DOMContentLoaded logic but ensures it loads if active by default.
+    const initialActiveTab = document.querySelector('#mainNavigation .nav-link.active');
+    if (initialActiveTab && initialActiveTab.getAttribute('data-bs-target') === '#usageHistorySection') {
+        loadUsageHistory(null);
+    }
   };
+
+  function formatReadableTimestamp(isoString) {
+    if (!isoString) return 'N/A';
+    try {
+        const date = new Date(isoString);
+        if (isNaN(date.getTime())) return isoString; // Return original if not a valid date
+
+        const year = date.getFullYear();
+        const month = ('0' + (date.getMonth() + 1)).slice(-2);
+        const day = ('0' + date.getDate()).slice(-2);
+        const hours = ('0' + date.getHours()).slice(-2);
+        const minutes = ('0' + date.getMinutes()).slice(-2);
+        const seconds = ('0' + date.getSeconds()).slice(-2);
+        return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+    } catch (e) {
+        return isoString; // In case of any error with date parsing
+    }
+  }
+
+  function loadUsageHistory(barcodeToFilter) {
+    showLoading(true);
+    var tableBody = document.getElementById('usageHistoryTable').getElementsByTagName('tbody')[0];
+    tableBody.innerHTML = '<tr><td colspan="4" class="text-center">로딩 중...</td></tr>';
+
+    google.script.run
+        .withSuccessHandler(function(jsonStringResponse) {
+            showLoading(false);
+            tableBody.innerHTML = ''; // Clear loading message
+            try {
+                var historyRecords = JSON.parse(jsonStringResponse);
+
+                if (historyRecords.error) {
+                    console.error("Error loading usage history:", historyRecords.error);
+                    showMessage("사용 내역 로딩 중 오류: " + historyRecords.error, false);
+                    var row = tableBody.insertRow();
+                    var cell = row.insertCell();
+                    cell.colSpan = 4;
+                    cell.textContent = "오류: " + historyRecords.error;
+                    cell.style.textAlign = "center";
+                    return;
+                }
+
+                if (!Array.isArray(historyRecords) || historyRecords.length === 0) {
+                    var row = tableBody.insertRow();
+                    var cell = row.insertCell();
+                    cell.colSpan = 4;
+                    cell.textContent = "사용 내역이 없습니다.";
+                    cell.style.textAlign = "center";
+                    return;
+                }
+
+                historyRecords.forEach(function(record) {
+                    var row = tableBody.insertRow();
+                    row.insertCell().textContent = formatReadableTimestamp(record.timestamp);
+                    row.insertCell().textContent = record.barcode;
+                    row.insertCell().textContent = typeof record.amountUsed === 'number' ? record.amountUsed.toFixed(2) : 'N/A';
+                    row.insertCell().textContent = typeof record.newBalance === 'number' ? record.newBalance.toFixed(2) : 'N/A';
+                });
+
+            } catch (e) {
+                console.error("Error parsing usage history response:", e, jsonStringResponse);
+                showMessage("사용 내역 응답 처리 중 오류: " + e.message, false);
+                var row = tableBody.insertRow();
+                var cell = row.insertCell();
+                cell.colSpan = 4;
+                cell.textContent = "데이터 처리 중 오류가 발생했습니다.";
+                cell.style.textAlign = "center";
+            }
+        })
+        .withFailureHandler(function(error) {
+            showLoading(false);
+            tableBody.innerHTML = ''; // Clear loading message
+            showMessage("사용 내역 로딩 중 서버 오류: " + error.message, false);
+            console.error("Server error loading usage history:", error);
+            var row = tableBody.insertRow();
+            var cell = row.insertCell();
+            cell.colSpan = 4;
+            cell.textContent = "서버 통신 중 오류가 발생했습니다.";
+            cell.style.textAlign = "center";
+        })
+        .getUsageHistory(barcodeToFilter);
+  }
+
+  function updateDashboard() {
+    // Optional: Show a subtle loading indicator on the dashboard stats if needed
+    // document.getElementById('totalCouponsStat').textContent = "로딩중...";
+    // etc.
+
+    google.script.run
+      .withSuccessHandler(function(responseString) {
+        try {
+          var stats = JSON.parse(responseString);
+          if (stats.error) {
+            console.error("대시보드 통계 로딩 오류:", stats.error);
+            // It might be better to show a generic error on the stat elements
+            // or a specific error message via showMessage for critical errors.
+            document.getElementById('totalCouponsStat').textContent = "오류";
+            document.getElementById('availableCouponsStat').textContent = "오류";
+            document.getElementById('expiringSoonStat').textContent = "오류";
+            document.getElementById('totalBalanceStat').textContent = "오류";
+            // showMessage("대시보드 통계 로딩 중 오류: " + stats.error, false); // Optional: if you want a banner
+            return;
+          }
+
+          document.getElementById('totalCouponsStat').textContent = stats.totalCoupons + " 개";
+          document.getElementById('availableCouponsStat').textContent = stats.availableCoupons + " 개";
+          document.getElementById('expiringSoonStat').textContent = stats.expiringSoonCoupons + " 개";
+          
+          var balanceValue = parseFloat(stats.totalGiftCertificateBalance || 0);
+          var formattedBalance = new Intl.NumberFormat('ko-KR', { style: 'currency', currency: 'KRW' }).format(balanceValue);
+          document.getElementById('totalBalanceStat').textContent = formattedBalance;
+
+        } catch (e) {
+          console.error("대시보드 통계 응답 파싱 오류:", e, responseString);
+          document.getElementById('totalCouponsStat').textContent = "데이터 오류";
+          document.getElementById('availableCouponsStat').textContent = "데이터 오류";
+          document.getElementById('expiringSoonStat').textContent = "데이터 오류";
+          document.getElementById('totalBalanceStat').textContent = "데이터 오류";
+          // showMessage("대시보드 통계 응답 처리 중 오류: " + e.message, false); // Optional
+        }
+      })
+      .withFailureHandler(function(error) {
+        console.error("대시보드 통계 서버 호출 오류:", error);
+        document.getElementById('totalCouponsStat').textContent = "서버 오류";
+        document.getElementById('availableCouponsStat').textContent = "서버 오류";
+        document.getElementById('expiringSoonStat').textContent = "서버 오류";
+        document.getElementById('totalBalanceStat').textContent = "서버 오류";
+        // showMessage("대시보드 통계 로딩 중 서버 통신 오류: " + error.message, false); // Optional
+      })
+      .getDashboardStats();
+  }
 </script>
 </body>
 </html>
