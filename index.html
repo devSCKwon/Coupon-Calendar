@@ -497,20 +497,25 @@
     document.getElementById('filterStartDate').placeholder = 'YYYY-MM-DD (조회 시작일)';
     document.getElementById('filterEndDate').placeholder = 'YYYY-MM-DD (조회 종료일)';
 
-    // 조회 필터 날짜 기본값 설정
+    // --- New default date filter values ---
     var today = new Date();
 
+    // Set start date to one year ago from today
     var startDateInput = document.getElementById('filterStartDate');
-    startDateInput.value = formatDate(today); // 시작일은 오늘
+    var oneYearAgo = new Date(today);
+    oneYearAgo.setFullYear(today.getFullYear() - 1);
+    startDateInput.value = formatDate(oneYearAgo); // formatDate should already exist
 
+    // Set end date to one day after today
     var endDateInput = document.getElementById('filterEndDate');
-    var oneYearFromToday = new Date(today);
-    oneYearFromToday.setFullYear(today.getFullYear() + 1); // 종료일은 오늘로부터 1년 뒤
-    endDateInput.value = formatDate(oneYearFromToday);
+    var tomorrow = new Date(today);
+    tomorrow.setDate(today.getDate() + 1);
+    endDateInput.value = formatDate(tomorrow); // formatDate should already exist
+    // --- End of new default date filter values ---
 
     // 초기 데이터 로드
     loadLatestCoupons();
-    loadAllCoupons(); // 사용자가 변경하지 않았다면 이제 기본 날짜를 사용합니다.
+    loadAllCoupons();
     toggleBalanceInput(); // 금액권 초기 금액 입력 필드 표시/숨김 상태 초기화
   };
 </script>

@@ -1,7 +1,8 @@
-// 전역 변수 - 사용자가 직접 입력해야 합니다
-var SPREADSHEET_ID = "YOUR_SPREADSHEET_ID_HERE"; // 실제 스프레드시트 ID로 교체해주세요
-var COUPON_SHEET_NAME = "Coupons"; // 쿠폰 데이터가 저장될 시트 이름
-var USAGE_LOG_SHEET_NAME = "UsageLog"; // 사용 내역이 기록될 시트 이름
+// 전역 변수 - 사용자가 직접 입력해야 하는 부분도 있었으나, 제공된 ID로 일부 설정됨
+var SPREADSHEET_ID = "1jLqURqn9hoHZB1r32RC3q6A_U52YiU5Vjc4_0LfV1Tk";
+var DRIVE_FOLDER_ID = "19Gm6k5Jf1qQDT4YfddElLC7QO7jvySfQ"; // 바코드 이미지 저장 폴더 ID (현재 기능에서는 직접 사용되지 않음)
+var COUPON_SHEET_NAME = "Coupons"; // 쿠폰 정보 시트 이름
+var USAGE_LOG_SHEET_NAME = "UsageLog"; // 사용 기록 시트 이름
 
 /**
  * 웹 앱의 HTML 인터페이스를 제공합니다.
