@@ -11,20 +11,39 @@
 
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
   <style>
+    /* --- Base (Mobile-First) Styles --- */
+    /* Derived from original @media (max-width: 480px) and merged with original base */
     body {
         font-family: 'Roboto', 'Noto Sans KR', sans-serif;
         line-height: 1.6;
         background-color: #f8f9fa;
         color: #212529;
+        padding: 0.625rem; /* 10px */
+        font-size: 0.9rem;
     }
-
+    .container-fluid {
+        padding-left: 0.3125rem; /* 5px */
+        padding-right: 0.3125rem; /* 5px */
+    }
+    .custom-section-container {
+        background-color: #fff;
+        padding: 0.625rem; /* 10px */
+        margin-bottom: 0.9375rem; /* 15px */
+        border-radius: 0.375rem;
+        box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,.075);
+    }
+    #navigationSection.custom-section-container {
+        padding-top: 0.625rem; /* 10px */
+        padding-bottom: 0;
+    }
     h1, h2, h3 {
         color: #2c3e50;
         font-weight: 700;
     }
+    h1.text-center { font-size: 1.5rem; }
     h2 {
-        font-size: 1.75rem;
-        border-bottom: 2px solid #dee2e6;
+        font-size: 1.25rem;
+        border-bottom: 0.125rem solid #dee2e6; /* 2px */
         padding-bottom: 0.5em;
         margin-bottom: 1em;
         margin-top: 0.5em;
@@ -33,14 +52,51 @@
     #contentSections > .tab-pane > h2 {
         margin-top: 0;
     }
-
-
-    .custom-section-container {
+    .modal-content-base {
         background-color: #fff;
-        padding: 20px;
-        margin-bottom: 25px;
-        border-radius: 0.375rem;
-        box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,.075);
+        margin: 5% auto;
+        padding: 0;
+        border: 0.0625rem solid rgba(0,0,0,.2); /* 1px */
+        border-radius: 0.5rem;
+        width: 98%;
+        max-width: 34.375rem; /* 550px */
+        box-shadow: 0 0.5rem 1rem rgba(0,0,0,.15);
+        position: relative;
+        display: flex;
+        flex-direction: column;
+    }
+    .custom-modal-header, .custom-modal-body, .custom-modal-footer {
+        padding: 0.75rem;
+    }
+    .custom-modal-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        border-bottom: 0.0625rem solid #dee2e6; /* 1px */
+        border-top-left-radius: calc(0.5rem - 0.0625rem); /* 1px */
+        border-top-right-radius: calc(0.5rem - 0.0625rem); /* 1px */
+    }
+    .custom-modal-title {
+        font-size: 1.1rem;
+        margin-bottom: 0;
+        line-height: 1.5;
+        font-weight: 500;
+    }
+    .custom-modal-body {
+        position: relative;
+        flex: 1 1 auto;
+    }
+    .custom-modal-footer {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: flex-end;
+        border-top: 0.0625rem solid #dee2e6; /* 1px */
+        border-bottom-right-radius: calc(0.5rem - 0.0625rem); /* 1px */
+        border-bottom-left-radius: calc(0.5rem - 0.0625rem); /* 1px */
+    }
+    .custom-modal-footer > .btn {
+        margin-left: 0.25rem;
     }
 
     #allCouponsTable th {
@@ -64,7 +120,6 @@
         background-color: #fff3cd !important;
         color: #664d03 !important;
     }
-
     .modal-base {
         display: none;
         position: fixed;
@@ -76,52 +131,6 @@
         overflow-x: hidden;
         overflow-y: auto;
         background-color: rgba(0,0,0,0.5);
-    }
-    .modal-content-base {
-        background-color: #fff;
-        margin: 1.75rem auto;
-        padding: 0;
-        border: 1px solid rgba(0,0,0,.2);
-        border-radius: 0.5rem;
-        width: auto;
-        max-width: 550px;
-        box-shadow: 0 0.5rem 1rem rgba(0,0,0,.15);
-        position: relative;
-        display: flex;
-        flex-direction: column;
-    }
-    .custom-modal-header {
-        display: flex;
-        align-items: flex-start;
-        justify-content: space-between;
-        padding: 1rem 1rem;
-        border-bottom: 1px solid #dee2e6;
-        border-top-left-radius: calc(0.5rem - 1px);
-        border-top-right-radius: calc(0.5rem - 1px);
-    }
-    .custom-modal-title {
-        margin-bottom: 0;
-        line-height: 1.5;
-        font-size: 1.25rem;
-        font-weight: 500;
-    }
-    .custom-modal-body {
-        position: relative;
-        flex: 1 1 auto;
-        padding: 1rem;
-    }
-    .custom-modal-footer {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        justify-content: flex-end;
-        padding: 0.75rem;
-        border-top: 1px solid #dee2e6;
-        border-bottom-right-radius: calc(0.5rem - 1px);
-        border-bottom-left-radius: calc(0.5rem - 1px);
-    }
-    .custom-modal-footer > .btn {
-        margin-left: 0.25rem;
     }
     .custom-close-button {
          box-sizing: content-box;
@@ -139,7 +148,6 @@
      .custom-close-button:hover {
          opacity: .75;
      }
-
     #loading {
         display: none;
         align-items: center;
@@ -154,22 +162,21 @@
         background-color: rgba(0,0,0,0.65);
         z-index:1100;
     }
-
     .fab {
        position: fixed;
-       bottom: 30px;
-       right: 30px;
-       width: 56px;
-       height: 56px;
+       bottom: 0.9375rem; /* 15px */
+       right: 0.9375rem; /* 15px */
+       width: 3rem; /* 48px */
+       height: 3rem; /* 48px */
        background-color: #0d6efd;
        color: white;
        border: none;
        border-radius: 50%;
-       font-size: 24px;
+       font-size: 1.25rem; /* 20px */
        display: flex;
        align-items: center;
        justify-content: center;
-       box-shadow: 0 4px 8px rgba(0,0,0,0.2), 0 0 0 2px rgba(255,255,255,0.1) inset;
+       box-shadow: 0 0.25rem 0.5rem rgba(0,0,0,0.2), 0 0 0 0.125rem rgba(255,255,255,0.1) inset; /* 4px 8px, 2px */
        cursor: pointer;
        z-index: 1040;
        transition: background-color 0.2s ease, transform 0.2s ease;
@@ -179,34 +186,17 @@
        transform: scale(1.05);
    }
    .fab i {
-        /* Icon centered by flex on parent */
    }
-
-   /* Custom styles for dashboard cards */
-   #dashboardSection .card {
-       transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-       border: none;
-   }
-   #dashboardSection .card:hover {
-       transform: translateY(-5px);
-       box-shadow: 0 8px 15px rgba(0,0,0,0.1) !important;
-   }
-   /* #dashboardSection .card-body i { mb-2 on <i> already provides margin } */
-
    #newCouponModalBody h4 {
-       font-size: 1.15rem;
-       color: #495057;
-       margin-top: 1rem;
-       margin-bottom: 0.75rem;
-       border-bottom: 1px solid #dee2e6;
-       padding-bottom: 0.5rem;
+       font-size: 1rem;
+       margin-top: 0.75rem;
    }
    #newCouponModalBody h4:first-child {
        margin-top: 0;
    }
    .image-upload-area {
        padding: 1rem;
-       border: 2px dashed #adb5bd;
+       border: 0.125rem dashed #adb5bd; /* 2px */
        border-radius: 0.25rem;
        text-align: center;
        background-color: #f8f9fa;
@@ -228,8 +218,8 @@
    #newCouponImagePreview {
        margin-top: 1rem;
        max-width: 100%;
-       max-height: 180px;
-       border: 1px solid #dee2e6;
+       max-height: 11.25rem; /* 180px */
+       border: 0.0625rem solid #dee2e6; /* 1px */
        padding: 0.25rem;
        border-radius: 0.25rem;
    }
@@ -240,19 +230,23 @@
    #newCouponModal .modal-content-base .modal-actions {
         text-align: right;
         margin-top: 1.5rem;
-        border-top: 1px solid #dee2e6;
+        border-top: 0.0625rem solid #dee2e6; /* 1px */
         padding-top: 1rem;
    }
-
     #mainNavigation {
         margin-bottom: 1.5rem;
     }
     #mainNavigation .nav-link {
         color: #0d6efd;
         font-weight: 500;
-        border-bottom: 3px solid transparent;
+        border-bottom: 0.1875rem solid transparent; /* 3px */
         border-radius: 0;
-        padding-top: 0.75rem; padding-bottom: 0.75rem;
+        font-size: 0.8rem;
+        padding: 0.5rem 0.2rem;
+    }
+    #mainNavigation .nav-link i {
+        margin-right: 0.1rem;
+        font-size: 0.85rem;
     }
     #mainNavigation .nav-link.active {
         color: #0a58ca;
@@ -263,89 +257,206 @@
         color: #0b5ed7;
         border-bottom-color: #cfe2ff;
     }
+    #allCouponsTable { min-width: auto; }
+    #allCouponsTable th, #allCouponsTable td { padding: 0.4rem; font-size: 0.8rem; }
+    .btn { font-size: 0.85rem; padding: 0.5rem 0.75rem; } /* Increased padding */
+    .form-control, .form-select, .form-control-sm { font-size: 0.9rem; padding: 0.5rem 0.75rem; } /* Increased padding */
+    .form-label { font-size: 0.9rem; }
+    #dashboardSection .card-body { padding: 0.5rem; }
+    #dashboardSection .card-title { font-size: 0.85rem; margin-top: 0.15rem !important;}
+    #dashboardSection .card-text { font-size: 1.3rem; }
+    #dashboardSection .card-body i { font-size: 1.5rem !important; margin-bottom: 0.15rem !important;}
+    .filters .btn { width: 100%; }
 
-    /* Responsive Adjustments */
-    @media (max-width: 768px) { /* Tablet */
+    /* --- Tablet Styles --- */
+    @media (min-width: 576px) {
+        body {
+            padding: 0;
+            font-size: 1rem;
+        }
+        .container-fluid {
+            padding-left: 0.9375rem; /* 15px */
+            padding-right: 0.9375rem; /* 15px */
+        }
         .custom-section-container {
-            padding: 15px;
-            margin-bottom: 20px;
+            padding: 0.9375rem; /* 15px */
+            margin-bottom: 1.25rem; /* 20px */
+        }
+        #navigationSection.custom-section-container {
+            padding-top: 0.9375rem; /* 15px */
+            padding-bottom: 0.9375rem; /* 15px */
         }
         h1.text-center { font-size: 1.75rem; }
         h2 { font-size: 1.5rem; }
         #allCouponsTable {
-           min-width: 600px;
+           min-width: 37.5rem; /* 600px */
         }
-         #allCouponsTable th, #allCouponsTable td { padding: 0.6rem 0.5rem; }
-         #dashboardSection .card-title { font-size: 1rem; }
-         #dashboardSection .card-text { font-size: 1.75rem; }
-         #dashboardSection .card-body i { font-size: 2rem !important; }
-    }
-
-    @media (max-width: 480px) { /* Mobile */
-        body {
-            padding: 10px;
-            font-size: 0.9rem;
-        }
-        .container-fluid {
-            padding-left: 5px;
-            padding-right: 5px;
-        }
-        .custom-section-container {
-            padding: 10px;
-            margin-bottom: 15px;
-        }
-        #navigationSection.custom-section-container {
-            padding-top: 10px; /* Reduce top/bottom padding for nav container */
-            padding-bottom: 0;
-        }
-        h1.text-center { font-size: 1.5rem; }
-        h2 { font-size: 1.25rem; }
-
-        .modal-content-base {
-            width: 98%;
-            margin: 5% auto;
-            padding: 0;
-        }
-        .custom-modal-header, .custom-modal-body, .custom-modal-footer {
-            padding: 0.75rem;
-        }
-        .custom-modal-title { font-size: 1.1rem; }
-        #newCouponModalBody h4 { font-size: 1rem; margin-top: 0.75rem;}
-
-        #allCouponsTable {
-           min-width: auto;
-        }
-        #allCouponsTable th, #allCouponsTable td { padding: 0.4rem; font-size: 0.8rem; }
+        #allCouponsTable th, #allCouponsTable td { padding: 0.6rem 0.5rem; font-size: inherit; }
 
         .fab {
-            bottom: 15px;
-            right: 15px;
-            width: 48px;
-            height: 48px;
-            font-size: 20px;
+            width: 3.5rem; /* 56px */
+            height: 3.5rem; /* 56px */
+            font-size: 1.5rem; /* 24px */
+            bottom: 1.875rem; /* 30px */
+            right: 1.875rem; /* 30px */
         }
         #mainNavigation .nav-link {
-            font-size: 0.8rem;
-            padding: 0.5rem 0.2rem;
+            font-size: inherit;
+            padding-top: 0.75rem; padding-bottom: 0.75rem;
         }
         #mainNavigation .nav-link i {
+            margin-right: 0.25rem;
+            font-size: 1rem;
+        }
+        .btn {
+            font-size: 1rem;
+            padding: 0.375rem 0.75rem;
+        }
+        .form-control, .form-select, .form-control-sm {
+            font-size: 1rem;
+            padding: 0.375rem 0.75rem;
+        }
+        .form-label { font-size: 1rem; }
+        #dashboardSection .card-body { padding: 1rem; }
+        #dashboardSection .card-title { font-size: 1rem; margin-top: initial !important; }
+        #dashboardSection .card-text { font-size: 1.75rem; }
+        #dashboardSection .card-body i { font-size: 2rem !important;  margin-bottom: 0.5rem !important; }
+        .filters .btn { width: auto; }
+
+        .modal-content-base {
+            width: auto;
+            margin: 1.75rem auto;
+        }
+        .custom-modal-header, .custom-modal-body, .custom-modal-footer {
+            padding: 1rem;
+        }
+        .custom-modal-title { font-size: 1.25rem; }
+        #newCouponModalBody h4 { font-size: 1.15rem; margin-top: 1rem;}
+    }
+
+    /* --- Desktop Styles --- */
+    @media (min-width: 992px) {
+        h2 {
+            font-size: 1.75rem;
+        }
+        .custom-section-container {
+            padding: 1.25rem; /* 20px */
+            margin-bottom: 1.5625rem; /* 25px */
+        }
+        #navigationSection.custom-section-container {
+            padding-top: 1.25rem; /* 20px */
+            padding-bottom: 1.25rem; /* 20px */
+        }
+        .modal-content-base {
+            max-width: 34.375rem; /* 550px */
+        }
+       #dashboardSection .card {
+           transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+           border: none;
+       }
+       #dashboardSection .card:hover {
+           transform: translateY(-0.3125rem); /* -5px */
+           box-shadow: 0 0.5rem 0.9375rem rgba(0,0,0,0.1) !important; /* 8px 15px */
+       }
+    }
+
+    /* Navigation Toggler */
+    .navbar-toggler {
+        padding: 0.25rem 0.75rem;
+        font-size: 1.25rem;
+        line-height: 1;
+        background-color: transparent;
+        border: 0.0625rem solid transparent; /* 1px */
+        border-radius: 0.25rem;
+        transition: box-shadow .15s ease-in-out;
+        color: #0d6efd;
+        margin-bottom: 0.5rem;
+    }
+    .navbar-toggler:focus {
+        text-decoration: none;
+        outline: 0;
+        box-shadow: 0 0 0 0.25rem;
+    }
+    .navbar-toggler i {
+        font-size: 1.5rem;
+        vertical-align: middle;
+    }
+
+    /* Collapsible Navigation - Mobile Base */
+    #mainNavigationCollapse {
+        display: none;
+        width: 100%;
+    }
+    #mainNavigationCollapse.open {
+        display: block;
+    }
+
+    #mainNavigationCollapse #mainNavigation {
+        flex-direction: column;
+        align-items: stretch;
+        width: 100%;
+        margin-bottom: 0;
+    }
+    #mainNavigationCollapse #mainNavigation .nav-item {
+        width: 100%;
+    }
+    #mainNavigationCollapse #mainNavigation .nav-link {
+        text-align: left;
+        border-bottom: 0.0625rem solid #eee !important; /* 1px */
+        border-radius: 0 !important;
+        padding: 0.75rem 1rem !important;
+        font-size: 0.9rem;
+    }
+    #mainNavigationCollapse #mainNavigation .nav-link.active {
+        border-left: 0.1875rem solid #0a58ca; /* 3px */
+        border-bottom-color: #eee !important;
+        background-color: #e9ecef !important;
+        font-weight: bold;
+    }
+     #mainNavigationCollapse #mainNavigation .nav-link i {
+        margin-right: 0.5rem;
+        font-size: 0.9rem;
+    }
+
+    /* Desktop Navigation Styles (Applied above mobile-first general styles) */
+    @media (min-width: 992px) { /* lg breakpoint */
+        .navbar-toggler {
+            display: none !important;
+        }
+        #mainNavigationCollapse {
+            display: flex !important;
+            visibility: visible !important;
+            height: auto !important;
+            width: auto;
+            overflow: visible !important;
+        }
+        #mainNavigation {
+             margin-bottom: 1.5rem !important;
+        }
+        #mainNavigationCollapse #mainNavigation {
+            flex-direction: row;
+            align-items: center;
+        }
+        #mainNavigationCollapse #mainNavigation .nav-item {
+            width: auto;
+        }
+        #mainNavigationCollapse #mainNavigation .nav-link {
+            text-align: center;
+            border-bottom: 0.1875rem solid transparent !important; /* 3px */
+            border-left: none;
+            padding: 0.75rem 0.75rem !important;
+            font-size: 1rem;
+            background-color: transparent !important;
+            font-weight: 500;
+        }
+        #mainNavigationCollapse #mainNavigation .nav-link.active {
+            border-bottom-color: #0a58ca !important;
+            font-weight: bold;
+        }
+        #mainNavigationCollapse #mainNavigation .nav-link i {
             margin-right: 0.1rem;
             font-size: 0.85rem;
         }
-        .btn {
-            font-size: 0.85rem;
-            padding: 0.3rem 0.6rem;
-        }
-        .form-control, .form-select, .form-control-sm {
-            font-size: 0.9rem;
-            padding: 0.3rem 0.6rem;
-        }
-        .form-label { font-size: 0.9rem; }
-        #dashboardSection .card-body { padding: 0.5rem; }
-        #dashboardSection .card-title { font-size: 0.85rem; margin-top: 0.15rem !important;}
-        #dashboardSection .card-text { font-size: 1.3rem; }
-        #dashboardSection .card-body i { font-size: 1.5rem !important; margin-bottom: 0.15rem !important;}
-        .filters .btn { width: 100%; } /* Make filter button full width on mobile */
     }
   </style>
 </head>
@@ -394,23 +505,28 @@
     </div>
 
     <div id="navigationSection" class="custom-section-container pt-2 pb-0">
-        <ul class="nav nav-pills nav-fill" id="mainNavigation" role="tablist">
-            <li class="nav-item" role="presentation">
-                <button class="nav-link active" id="navCouponList-tab" data-bs-target="#couponListSection" type="button" role="tab" aria-controls="couponListSection" aria-selected="true">
-                    <i class="bi bi-list-ul me-1"></i>쿠폰 목록
-                </button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="navCouponRegistration-tab" data-bs-target="#couponRegistrationSection" type="button" role="tab" aria-controls="couponRegistrationSection" aria-selected="false">
-                    <i class="bi bi-info-circle me-1"></i>등록 안내
-                </button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="navUsageHistory-tab" data-bs-target="#usageHistorySection" type="button" role="tab" aria-controls="usageHistorySection" aria-selected="false">
-                    <i class="bi bi-clock-history me-1"></i>사용 히스토리
-                </button>
-            </li>
-        </ul>
+        <button class="navbar-toggler d-lg-none" type="button" id="mainNavToggler" aria-label="Toggle navigation" aria-controls="mainNavigationCollapse" aria-expanded="false">
+            <i class="bi bi-list"></i>
+        </button>
+        <div class="collapse navbar-collapse" id="mainNavigationCollapse">
+            <ul class="nav nav-pills nav-fill" id="mainNavigation" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="navCouponList-tab" data-bs-target="#couponListSection" type="button" role="tab" aria-controls="couponListSection" aria-selected="true">
+                        <i class="bi bi-list-ul me-1"></i>쿠폰 목록
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="navCouponRegistration-tab" data-bs-target="#couponRegistrationSection" type="button" role="tab" aria-controls="couponRegistrationSection" aria-selected="false">
+                        <i class="bi bi-info-circle me-1"></i>등록 안내
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="navUsageHistory-tab" data-bs-target="#usageHistorySection" type="button" role="tab" aria-controls="usageHistorySection" aria-selected="false">
+                        <i class="bi bi-clock-history me-1"></i>사용 히스토리
+                    </button>
+                </li>
+            </ul>
+        </div>
     </div>
 
     <div id="contentSections">
@@ -488,10 +604,10 @@
 
   <button id="addCouponFab" class="fab" title="새 쿠폰 추가"><i class="bi bi-plus-lg"></i></button>
 
-  <div id="newCouponModal" class="modal-base">
+  <div id="newCouponModal" class="modal-base" role="dialog" aria-modal="true" aria-labelledby="newCouponModalLabel">
     <div class="modal-content-base">
         <div class="custom-modal-header">
-            <h2 class="custom-modal-title">새 쿠폰 등록</h2>
+            <h2 class="custom-modal-title" id="newCouponModalLabel">새 쿠폰 등록</h2>
             <button type="button" class="custom-close-button" onclick="closeNewCouponModal()" aria-label="Close">&times;</button>
         </div>
         <div class="custom-modal-body" id="newCouponModalBody">
@@ -506,7 +622,7 @@
                     <label for="newCouponCameraFile" class="btn btn-info btn-sm"><i class="bi bi-camera"></i> 사진 촬영</label>
                     <input type="file" id="newCouponCameraFile" accept="image/*" capture="environment" style="display: none;">
                 </div>
-                <img id="newCouponImagePreview" src="#" alt="이미지 미리보기" style="display: none;">
+                <img id="newCouponImagePreview" src="#" class="img-fluid" alt="이미지 미리보기" style="display: none;">
             </div>
             <hr>
             <h4>2. 쿠폰 정보 입력</h4>
@@ -517,7 +633,7 @@
                 </div>
                 <div class="mb-3">
                     <label for="newCouponBarcode" class="form-label">바코드 번호 <span class="required-star">*</span></label>
-                    <input type="text" id="newCouponBarcode" class="form-control" placeholder="바코드 스캔 또는 직접 입력">
+                    <input type="text" id="newCouponBarcode" class="form-control" placeholder="바코드 스캔 또는 직접 입력" aria-required="true">
                 </div>
                 <div class="form-check mb-3">
                     <input type="checkbox" class="form-check-input" id="newCouponIsGift" onchange="toggleNewCouponBalanceField()">
@@ -525,11 +641,11 @@
                 </div>
                 <div id="newCouponBalanceGroup" style="display:none;" class="mb-3">
                     <label for="newCouponInitialBalance" class="form-label">초기 금액 <span class="required-star">*</span></label>
-                    <input type="number" id="newCouponInitialBalance" class="form-control" placeholder="금액권인 경우 초기 금액 입력">
+                    <input type="number" id="newCouponInitialBalance" class="form-control" placeholder="금액권인 경우 초기 금액 입력" aria-required="true">
                 </div>
                 <div class="mb-3">
                     <label for="newCouponExpiryDate" class="form-label">만료 일자 <span class="required-star">*</span></label>
-                    <input type="text" id="newCouponExpiryDate" class="form-control" placeholder="YYYY-MM-DD" onfocus="(this.type='date')" onblur="if(!this.value)this.type='text'">
+                    <input type="text" id="newCouponExpiryDate" class="form-control" placeholder="YYYY-MM-DD" onfocus="(this.type='date')" onblur="if(!this.value)this.type='text'" aria-required="true">
                 </div>
             </div>
         </div>
@@ -540,10 +656,10 @@
     </div>
   </div>
 
-  <div id="usageModal" class="modal-base">
+  <div id="usageModal" class="modal-base" role="dialog" aria-modal="true" aria-labelledby="usageModalLabel">
     <div class="modal-content-base">
       <div class="custom-modal-header">
-        <h3 class="custom-modal-title">금액권 사용 기록</h3>
+        <h3 class="custom-modal-title" id="usageModalLabel">금액권 사용 기록</h3>
         <button type="button" class="custom-close-button" onclick="closeUsageModal()" aria-label="Close">&times;</button>
       </div>
       <div class="custom-modal-body">
@@ -562,10 +678,10 @@
     </div>
   </div>
 
-  <div id="generalCouponUsageModal" class="modal-base">
+  <div id="generalCouponUsageModal" class="modal-base" role="dialog" aria-modal="true" aria-labelledby="generalCouponUsageModalLabel">
     <div class="modal-content-base">
       <div class="custom-modal-header">
-        <h3 class="custom-modal-title">일반 쿠폰 사용 처리</h3>
+        <h3 class="custom-modal-title" id="generalCouponUsageModalLabel">일반 쿠폰 사용 처리</h3>
         <button type="button" class="custom-close-button" onclick="closeGeneralCouponUsageModal()" aria-label="Close">&times;</button>
       </div>
       <div class="custom-modal-body">
@@ -1199,13 +1315,16 @@
 
   // Custom Tab Switching Logic
   document.addEventListener('DOMContentLoaded', function () {
-      const mainNavigation = document.getElementById('mainNavigation');
+      const mainNavigationUL = document.getElementById('mainNavigation'); // Renamed for clarity
       const tabPanes = document.querySelectorAll('#mainTabContent .tab-pane');
-      const navLinks = document.querySelectorAll('#mainNavigation .nav-link');
+      const navLinks = document.querySelectorAll('#mainNavigation .nav-link'); // These are the buttons inside list items
+      const mainNavigationCollapse = document.getElementById('mainNavigationCollapse');
+      const mainNavTogglerButton = document.getElementById('mainNavToggler');
 
-      if (mainNavigation) {
-          mainNavigation.addEventListener('click', function(event) {
+      if (mainNavigationUL) {
+          mainNavigationUL.addEventListener('click', function(event) {
               let clickedTabButton = null;
+              // Find the actual button if a click happened on its child (like an icon)
               if (event.target.classList.contains('nav-link')) {
                   clickedTabButton = event.target;
               } else if (event.target.closest('.nav-link')) {
@@ -1228,13 +1347,26 @@
                       const targetPane = document.querySelector(targetPaneId);
                       if (targetPane) {
                           targetPane.classList.add('show', 'active');
-                           // 만약 활성화된 탭이 사용 히스토리 탭이면, 히스토리 로드
                           if (targetPaneId === '#usageHistorySection') {
-                            loadUsageHistory(null); // 전체 히스토리 로드
+                            loadUsageHistory(null);
                           }
                       }
                   }
               }
+
+              // If mobile menu is open, close it after a tab is clicked
+              if (mainNavigationCollapse && mainNavigationCollapse.classList.contains('open')) {
+                  mainNavigationCollapse.classList.remove('open');
+                  if (mainNavTogglerButton) {
+                      const togglerIcon = mainNavTogglerButton.querySelector('i');
+                      if (togglerIcon) {
+                          togglerIcon.classList.remove('bi-x');
+                          togglerIcon.classList.add('bi-list');
+                      }
+                  }
+              }
+
+              // Prevent default if the clicked element was a button or inside a nav-link
               if(event.target.tagName === 'BUTTON' || event.target.closest('.nav-link')) {
                 event.preventDefault();
               }
@@ -1280,6 +1412,8 @@
     newCouponModalElement = document.getElementById('newCouponModal');
     document.getElementById('addCouponFab').addEventListener('click', openNewCouponModal);
     document.getElementById('saveNewCouponButton').onclick = submitNewCouponForm;
+
+    initializeMobileNavbarToggler(); // Initialize the new toggler
 
     var newCouponImageFileInput = document.getElementById('newCouponImageFile');
     if (newCouponImageFileInput) {
@@ -1329,6 +1463,28 @@
         loadUsageHistory(null);
     }
   };
+
+  function initializeMobileNavbarToggler() {
+    const mainNavTogglerButton = document.getElementById('mainNavToggler');
+    const mainNavigationCollapse = document.getElementById('mainNavigationCollapse');
+    const togglerIcon = mainNavTogglerButton ? mainNavTogglerButton.querySelector('i') : null;
+
+    if (mainNavTogglerButton && mainNavigationCollapse && togglerIcon) {
+        mainNavTogglerButton.addEventListener('click', function() {
+            const isOpening = !mainNavigationCollapse.classList.contains('open');
+            mainNavigationCollapse.classList.toggle('open');
+            mainNavTogglerButton.setAttribute('aria-expanded', isOpening);
+
+            if (isOpening) {
+                togglerIcon.classList.remove('bi-list');
+                togglerIcon.classList.add('bi-x');
+            } else {
+                togglerIcon.classList.remove('bi-x');
+                togglerIcon.classList.add('bi-list');
+            }
+        });
+    }
+  }
 
   function formatReadableTimestamp(isoString) {
     if (!isoString) return 'N/A';
