@@ -1,3 +1,17 @@
+// --- Gemini API 설정 ---
+// 중요: 아래 변수에 사용자의 Gemini API 키와 사용할 모델명을 직접 입력해주세요.
+// API 키는 Google AI Studio (https://aistudio.google.com/app/apikey) 또는 Google Cloud Console에서 발급받을 수 있습니다.
+// API 키는 외부에 노출되지 않도록 주의하여 관리해주세요.
+
+// 사용자의 Gemini API 키를 입력하세요.
+var GEMINI_API_KEY = "여기에_API_키를_입력하세요";
+
+// 사용할 Gemini 모델명을 입력하세요. (예: "gemini-1.5-flash-latest", "gemini-pro-vision")
+// Vision 기능(이미지 분석)을 사용하려면 'vision'을 지원하는 모델 또는 최신 flash 모델을 사용해야 합니다.
+var GEMINI_MODEL_NAME = "gemini-1.5-flash-latest";
+// --- END Gemini API 설정 ---
+
+// 기존 전역 변수들 (SPREADSHEET_ID 등)은 이 아래에 위치합니다.
 // 전역 변수 - 사용자가 직접 입력해야 하는 부분도 있었으나, 제공된 ID로 일부 설정됨
 var SPREADSHEET_ID = "1jLqURqn9hoHZB1r32RC3q6A_U52YiU5Vjc4_0LfV1Tk";
 var DRIVE_FOLDER_ID = "19Gm6k5Jf1qQDT4YfddElLC7QO7jvySfQ"; // 바코드 이미지 저장 폴더 ID
@@ -631,4 +645,99 @@ function testUploadImage() {
   var testName = "testImage.png";
   var testMime = "image/png";
   Logger.log(uploadImageToDrive(testBase64, testName, testMime));
+}
+
+/**
+ * Calls the Gemini API with image data and a prompt to analyze the image.
+ * @param {string} base64ImageData The base64 encoded image data (without data: prefix).
+ * @param {string} promptText The text prompt for the Gemini API.
+ * @return {string|null} The extracted text from the API response, or null/error message if failed.
+ */
+function callGeminiApiForImageAnalysis(base64ImageData, promptText) {
+  if (!GEMINI_API_KEY || GEMINI_API_KEY === "여기에_API_키를_입력하세요") {
+    Logger.log("Gemini API Key is not set. Please update GEMINI_API_KEY in Code.gs.");
+    return "Gemini API Key가 설정되지 않았습니다. Code.gs 파일에서 GEMINI_API_KEY를 업데이트해주세요.";
+  }
+  if (!GEMINI_MODEL_NAME) {
+    Logger.log("Gemini Model Name is not set. Please update GEMINI_MODEL_NAME in Code.gs.");
+    return "Gemini 모델명이 설정되지 않았습니다. Code.gs 파일에서 GEMINI_MODEL_NAME을 업데이트해주세요.";
+  }
+
+  var apiUrl = "https://generativelanguage.googleapis.com/v1beta/models/" + GEMINI_MODEL_NAME + ":generateContent?key=" + GEMINI_API_KEY;
+
+  var payload = {
+    contents: [
+      {
+        parts: [
+          { inline_data: { mime_type: 'image/jpeg', data: base64ImageData } },
+          { text: promptText }
+        ]
+      }
+    ]
+    // Optional: Add generationConfig if needed
+    // generationConfig: {
+    //   "candidateCount": 1,
+    //   "temperature": 0.4, // Example for more deterministic output for extraction
+    //   "response_mime_type": "application/json", // To enforce JSON output
+    // }
+  };
+
+  var options = {
+    method: 'post',
+    contentType: 'application/json',
+    payload: JSON.stringify(payload),
+    muteHttpExceptions: true
+  };
+
+  try {
+    var httpResponse = UrlFetchApp.fetch(apiUrl, options);
+    var responseCode = httpResponse.getResponseCode();
+    var responseText = httpResponse.getContentText();
+
+    if (responseCode === 200) {
+      var parsedResponse = JSON.parse(responseText);
+      // Safely access the text part
+      if (parsedResponse &&
+          parsedResponse.candidates &&
+          parsedResponse.candidates[0] &&
+          parsedResponse.candidates[0].content &&
+          parsedResponse.candidates[0].content.parts &&
+          parsedResponse.candidates[0].content.parts[0] &&
+          parsedResponse.candidates[0].content.parts[0].text) {
+        Logger.log("Gemini API Response Text: " + parsedResponse.candidates[0].content.parts[0].text);
+        return parsedResponse.candidates[0].content.parts[0].text;
+      } else {
+        Logger.log("Gemini API Error: Could not parse text from response. Response: " + responseText);
+        // Check for safety ratings or other issues if text is missing
+        if (parsedResponse && parsedResponse.candidates && parsedResponse.candidates[0] && parsedResponse.candidates[0].finishReason) {
+            Logger.log("Gemini API Finish Reason: " + parsedResponse.candidates[0].finishReason);
+             if (parsedResponse.candidates[0].safetyRatings) {
+                Logger.log("Gemini API Safety Ratings: " + JSON.stringify(parsedResponse.candidates[0].safetyRatings));
+             }
+            return "Gemini API가 텍스트를 반환하지 않았습니다. 이유: " + parsedResponse.candidates[0].finishReason;
+        }
+         if (parsedResponse && parsedResponse.promptFeedback && parsedResponse.promptFeedback.blockReason) {
+           Logger.log("Gemini API Prompt Feedback Block Reason: " + parsedResponse.promptFeedback.blockReason);
+           return "Gemini API 프롬프트가 차단되었습니다. 이유: " + parsedResponse.promptFeedback.blockReason;
+         }
+        return "Gemini API 응답에서 텍스트를 추출할 수 없습니다.";
+      }
+    } else {
+      Logger.log("Gemini API Error - Code: " + responseCode + ", Response: " + responseText);
+      var errorDetails = "Gemini API 요청 실패: " + responseCode;
+      try {
+        var errorJson = JSON.parse(responseText);
+        if (errorJson && errorJson.error && errorJson.error.message) {
+          errorDetails += " - " + errorJson.error.message;
+        }
+      } catch (e) {
+        // responseText might not be JSON
+         errorDetails += " (응답 파싱 불가)";
+      }
+      return errorDetails;
+    }
+  } catch (e) {
+    Logger.log("Gemini API Exception: " + e.toString() + "; Stack: " + e.stack);
+    return "Gemini API 호출 중 예외 발생: " + e.toString();
+  }
 }
