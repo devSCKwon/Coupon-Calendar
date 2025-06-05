@@ -45,11 +45,11 @@ function uploadImageToDrive(base64ImageData, imageName, mimeType) {
     var file = folder.createFile(blob);
     // file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW); // 선택 사항: 공유 설정 - 개인 정보 보호에 주의
 
-    Logger.log("이미지가 성공적으로 업로드되었습니다: " + file.getName() + ", ID: " + file.getId() + ", Link: " + file.getWebViewLink());
+    Logger.log("이미지가 성공적으로 업로드되었습니다: " + file.getName() + ", ID: " + file.getId() + ", Link: " + file.getUrl()); // Log with getUrl()
     return JSON.stringify({
       success: true,
       fileId: file.getId(),
-      webViewLink: file.getWebViewLink() // webViewLink는 일반적으로 보기에 더 직접적입니다.
+      webViewLink: file.getUrl() // Changed to getUrl()
     });
 
   } catch (e) {
