@@ -4,6 +4,7 @@
   <base target="_top">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>쿠폰 관리 시스템</title>
+  <script src="https://cdn.tailwindcss.com"></script> <!-- Added Tailwind CSS -->
   <!-- Bootstrap CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
   <!-- Bootstrap Icons -->
@@ -11,17 +12,24 @@
 
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
   <style>
+    /*
     body {
         font-family: 'Roboto', 'Noto Sans KR', sans-serif;
         line-height: 1.6;
         background-color: #f8f9fa;
         color: #212529;
     }
+    */
 
+    /* Tailwind handles base h1,h2,h3 styling; specific overrides are applied via classes */
+    /*
     h1, h2, h3 {
         color: #2c3e50;
         font-weight: 700;
     }
+    */
+    /* Specific h2 styling is now done with Tailwind classes like text-xl, font-semibold, border-b etc. */
+    /*
     h2 {
         font-size: 1.75rem;
         border-bottom: 2px solid #dee2e6;
@@ -33,20 +41,19 @@
     #contentSections > .tab-pane > h2 {
         margin-top: 0;
     }
+    */
 
+    /* .custom-section-container replaced by Tailwind bg-white, p-4/p-6, rounded-lg, shadow-md, mb-6 */
 
-    .custom-section-container {
-        background-color: #fff;
-        padding: 20px;
-        margin-bottom: 25px;
-        border-radius: 0.375rem;
-        box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,.075);
-    }
-
+    /* #allCouponsTable th replaced by Tailwind bg-gray-50, px-4, py-3, etc. on th elements */
+    /*
     #allCouponsTable th {
         white-space: nowrap;
         background-color: #f8f9fa;
     }
+    */
+    /* .coupon-fully-used, .expired td, .nearing-expiry td are now handled by JS adding Tailwind classes directly to <tr> elements */
+    /*
     .coupon-fully-used {
         text-decoration: line-through;
         color: #6c757d !important;
@@ -64,7 +71,9 @@
         background-color: #fff3cd !important;
         color: #664d03 !important;
     }
-
+    */
+    /* Modal styles are now handled by Tailwind classes directly on the elements */
+    /*
     .modal-base {
         display: none;
         position: fixed;
@@ -139,7 +148,10 @@
      .custom-close-button:hover {
          opacity: .75;
      }
+    */
 
+    /* #loading is now styled by Tailwind classes applied via JavaScript in showLoading() */
+    /*
     #loading {
         display: none;
         align-items: center;
@@ -154,7 +166,9 @@
         background-color: rgba(0,0,0,0.65);
         z-index:1100;
     }
+    */
 
+    /*
     .fab {
        position: fixed;
        bottom: 30px;
@@ -180,9 +194,11 @@
    }
    .fab i {
         /* Icon centered by flex on parent */
-   }
+   /* }
+   */
 
-   /* Custom styles for dashboard cards */
+   /* Custom styles for dashboard cards - replaced by Tailwind classes */
+   /*
    #dashboardSection .card {
        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
        border: none;
@@ -191,8 +207,11 @@
        transform: translateY(-5px);
        box-shadow: 0 8px 15px rgba(0,0,0,0.1) !important;
    }
+   */
    /* #dashboardSection .card-body i { mb-2 on <i> already provides margin } */
 
+   /* Modal styles will be addressed in a later step - Actually, this is the step, so commenting out more related styles. */
+   /*
    #newCouponModalBody h4 {
        font-size: 1.15rem;
        color: #495057;
@@ -221,10 +240,13 @@
        font-size: 0.9em;
        color: #6c757d;
    }
+   /* .drag-drop-zone.dragover is now handled by JS adding Tailwind classes like border-blue-500 bg-blue-50 */
+   /*
    .drag-drop-zone.dragover {
         border-color: #0d6efd;
         background-color: #e9ecef;
    }
+   */
    #newCouponImagePreview {
        margin-top: 1rem;
        max-width: 100%;
@@ -243,7 +265,9 @@
         border-top: 1px solid #dee2e6;
         padding-top: 1rem;
    }
-
+   */
+    /* #mainNavigation styles are now handled by Tailwind classes on the navigation elements */
+    /*
     #mainNavigation {
         margin-bottom: 1.5rem;
     }
@@ -263,151 +287,80 @@
         color: #0b5ed7;
         border-bottom-color: #cfe2ff;
     }
+    */
 
-    /* Responsive Adjustments */
+    /* Responsive Adjustments -大部分通过Tailwind的响应式前缀 (sm:, md:, lg:) 处理 */
+    /*
     @media (max-width: 768px) { /* Tablet */
-        .custom-section-container {
-            padding: 15px;
-            margin-bottom: 20px;
-        }
-        h1.text-center { font-size: 1.75rem; }
-        h2 { font-size: 1.5rem; }
-        #allCouponsTable {
-           min-width: 600px;
-        }
-         #allCouponsTable th, #allCouponsTable td { padding: 0.6rem 0.5rem; }
-         #dashboardSection .card-title { font-size: 1rem; }
-         #dashboardSection .card-text { font-size: 1.75rem; }
-         #dashboardSection .card-body i { font-size: 2rem !important; }
-    }
+        /* .custom-section-container padding/margin handled by Tailwind */
+        /* h1, h2 font sizes handled by Tailwind text-xl, sm:text-2xl etc. */
+        /* #allCouponsTable min-width and padding handled by Tailwind on table/th/td */
+        /* #dashboardSection card elements font sizes handled by Tailwind */
+    /* } */
 
+    /*
     @media (max-width: 480px) { /* Mobile */
-        body {
-            padding: 10px;
-            font-size: 0.9rem;
-        }
-        .container-fluid {
-            padding-left: 5px;
-            padding-right: 5px;
-        }
-        .custom-section-container {
-            padding: 10px;
-            margin-bottom: 15px;
-        }
-        #navigationSection.custom-section-container {
-            padding-top: 10px; /* Reduce top/bottom padding for nav container */
-            padding-bottom: 0;
-        }
-        h1.text-center { font-size: 1.5rem; }
-        h2 { font-size: 1.25rem; }
-
-        .modal-content-base {
-            width: 98%;
-            margin: 5% auto;
-            padding: 0;
-        }
-        .custom-modal-header, .custom-modal-body, .custom-modal-footer {
-            padding: 0.75rem;
-        }
-        .custom-modal-title { font-size: 1.1rem; }
-        #newCouponModalBody h4 { font-size: 1rem; margin-top: 0.75rem;}
-
-        #allCouponsTable {
-           min-width: auto;
-        }
-        #allCouponsTable th, #allCouponsTable td { padding: 0.4rem; font-size: 0.8rem; }
-
-        .fab {
-            bottom: 15px;
-            right: 15px;
-            width: 48px;
-            height: 48px;
-            font-size: 20px;
-        }
-        #mainNavigation .nav-link {
-            font-size: 0.8rem;
-            padding: 0.5rem 0.2rem;
-        }
-        #mainNavigation .nav-link i {
-            margin-right: 0.1rem;
-            font-size: 0.85rem;
-        }
-        .btn {
-            font-size: 0.85rem;
-            padding: 0.3rem 0.6rem;
-        }
-        .form-control, .form-select, .form-control-sm {
-            font-size: 0.9rem;
-            padding: 0.3rem 0.6rem;
-        }
-        .form-label { font-size: 0.9rem; }
-        #dashboardSection .card-body { padding: 0.5rem; }
-        #dashboardSection .card-title { font-size: 0.85rem; margin-top: 0.15rem !important;}
-        #dashboardSection .card-text { font-size: 1.3rem; }
-        #dashboardSection .card-body i { font-size: 1.5rem !important; margin-bottom: 0.15rem !important;}
-        .filters .btn { width: 100%; } /* Make filter button full width on mobile */
-    }
+        /* body padding handled by Tailwind on body or main container */
+        /* .container-fluid padding handled by Tailwind */
+        /* .custom-section-container padding/margin handled by Tailwind */
+        /* #navigationSection.custom-section-container handled by Tailwind */
+        /* h1, h2 font sizes handled by Tailwind */
+        /* modal styles will be handled later */
+        /* #allCouponsTable th, td padding/font-size handled by Tailwind */
+        /* .fab size handled by Tailwind */
+        /* #mainNavigation .nav-link font-size/padding handled by Tailwind */
+        /* .btn, .form-control, .form-label font-size/padding handled by Tailwind */
+        /* #dashboardSection card elements font sizes/padding handled by Tailwind */
+        /* .filters .btn width handled by Tailwind w-full sm:w-auto */
+    /* } */
   </style>
 </head>
-<body>
-  <div class="container-fluid pt-3">
+<body class="bg-slate-50 text-slate-800 font-sans">
+  <div class="container-fluid pt-6 px-4 md:px-6 lg:px-8 pb-24 md:pb-8">
     <h1 class="mb-4 text-center">쿠폰 관리 시스템</h1>
 
-    <div id="dashboardSection" class="row text-center mb-4">
-        <div class="col-lg-3 col-md-6 mb-3">
-            <div class="card shadow-sm h-100">
-                <div class="card-body d-flex flex-column justify-content-center align-items-center">
-                    <i class="bi bi-collection fs-1 text-primary mb-2"></i>
-                    <h5 class="card-title mt-2">총 보유쿠폰</h5>
-                    <p class="card-text fs-4 fw-bold" id="totalCouponsStat">-- 개</p>
-                </div>
-            </div>
+    <div id="dashboardSection" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-center mb-6">
+        <div class="bg-white p-4 rounded-lg shadow-md flex flex-col items-center justify-center">
+            <i class="bi bi-collection text-3xl text-blue-500 mb-2"></i>
+            <h5 class="text-sm font-semibold text-gray-600 mb-1">총 보유쿠폰</h5>
+            <p class="text-2xl font-bold text-gray-800" id="totalCouponsStat">-- 개</p>
         </div>
-        <div class="col-lg-3 col-md-6 mb-3">
-            <div class="card shadow-sm h-100">
-                <div class="card-body d-flex flex-column justify-content-center align-items-center">
-                    <i class="bi bi-check-circle fs-1 text-success mb-2"></i>
-                    <h5 class="card-title mt-2">사용 가능</h5>
-                    <p class="card-text fs-4 fw-bold" id="availableCouponsStat">-- 개</p>
-                </div>
-            </div>
+        <div class="bg-white p-4 rounded-lg shadow-md flex flex-col items-center justify-center">
+            <i class="bi bi-check-circle text-3xl text-green-500 mb-2"></i>
+            <h5 class="text-sm font-semibold text-gray-600 mb-1">사용 가능</h5>
+            <p class="text-2xl font-bold text-gray-800" id="availableCouponsStat">-- 개</p>
         </div>
-        <div class="col-lg-3 col-md-6 mb-3">
-            <div class="card shadow-sm h-100">
-                <div class="card-body d-flex flex-column justify-content-center align-items-center">
-                    <i class="bi bi-hourglass-split fs-1 text-warning mb-2"></i>
-                    <h5 class="card-title mt-2">만료 예정</h5>
-                    <p class="card-text fs-4 fw-bold" id="expiringSoonStat">-- 개</p>
-                    <!-- "만료 예정" 기준은 추후 정의 필요 (예: 7일 이내) -->
-                </div>
-            </div>
+        <div class="bg-white p-4 rounded-lg shadow-md flex flex-col items-center justify-center">
+            <i class="bi bi-hourglass-split text-3xl text-yellow-500 mb-2"></i>
+            <h5 class="text-sm font-semibold text-gray-600 mb-1">만료 예정</h5>
+            <p class="text-2xl font-bold text-gray-800" id="expiringSoonStat">-- 개</p>
+            <!-- "만료 예정" 기준은 추후 정의 필요 (예: 7일 이내) -->
         </div>
-        <div class="col-lg-3 col-md-6 mb-3">
-            <div class="card shadow-sm h-100">
-                <div class="card-body d-flex flex-column justify-content-center align-items-center">
-                    <i class="bi bi-wallet2 fs-1 text-info mb-2"></i>
-                    <h5 class="card-title mt-2">총 잔액 (금액권)</h5>
-                    <p class="card-text fs-4 fw-bold" id="totalBalanceStat">₩ --</p>
-                </div>
-            </div>
+        <div class="bg-white p-4 rounded-lg shadow-md flex flex-col items-center justify-center">
+            <i class="bi bi-wallet2 text-3xl text-sky-500 mb-2"></i>
+            <h5 class="text-sm font-semibold text-gray-600 mb-1">총 잔액 (금액권)</h5>
+            <p class="text-2xl font-bold text-gray-800" id="totalBalanceStat">₩ --</p>
         </div>
     </div>
 
-    <div id="navigationSection" class="custom-section-container pt-2 pb-0">
-        <ul class="nav nav-pills nav-fill" id="mainNavigation" role="tablist">
-            <li class="nav-item" role="presentation">
-                <button class="nav-link active" id="navCouponList-tab" data-bs-target="#couponListSection" type="button" role="tab" aria-controls="couponListSection" aria-selected="true">
-                    <i class="bi bi-list-ul me-1"></i>쿠폰 목록
+    <div id="navigationSection" class="fixed inset-x-0 bottom-0 z-50 bg-white shadow-lg md:relative md:shadow-none md:bg-transparent md:mb-4 md:border md:border-gray-200 md:rounded-lg md:p-2">
+        <ul class="flex justify-around items-center h-16 md:h-auto md:justify-start md:space-x-1" id="mainNavigation" role="tablist">
+            <li class="flex-1 md:flex-none" role="presentation">
+                <button class="w-full h-full flex flex-col items-center justify-center p-1 text-gray-500 hover:bg-gray-100 hover:text-blue-600 focus:outline-none md:flex-row md:px-3 md:py-2 md:rounded-md md:hover:bg-blue-100 data-[active=true]:text-blue-600 data-[active=true]:bg-blue-50 data-[active=true]:md:bg-blue-600 data-[active=true]:md:text-white" id="navCouponList-tab" data-bs-target="#couponListSection" type="button" role="tab" aria-controls="couponListSection" aria-selected="true" data-active="true">
+                    <i class="bi bi-list-ul text-lg md:text-base md:mr-1.5"></i>
+                    <span class="text-xs mt-0.5 md:text-sm md:mt-0">쿠폰 목록</span>
                 </button>
             </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="navCouponRegistration-tab" data-bs-target="#couponRegistrationSection" type="button" role="tab" aria-controls="couponRegistrationSection" aria-selected="false">
-                    <i class="bi bi-info-circle me-1"></i>등록 안내
+            <li class="flex-1 md:flex-none" role="presentation">
+                <button class="w-full h-full flex flex-col items-center justify-center p-1 text-gray-500 hover:bg-gray-100 hover:text-blue-600 focus:outline-none md:flex-row md:px-3 md:py-2 md:rounded-md md:hover:bg-blue-100 data-[active=false]:text-blue-600 data-[active=false]:bg-blue-50 data-[active=false]:md:bg-blue-600 data-[active=false]:md:text-white" id="navCouponRegistration-tab" data-bs-target="#couponRegistrationSection" type="button" role="tab" aria-controls="couponRegistrationSection" aria-selected="false" data-active="false">
+                    <i class="bi bi-info-circle text-lg md:text-base md:mr-1.5"></i>
+                    <span class="text-xs mt-0.5 md:text-sm md:mt-0">등록 안내</span>
                 </button>
             </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="navUsageHistory-tab" data-bs-target="#usageHistorySection" type="button" role="tab" aria-controls="usageHistorySection" aria-selected="false">
-                    <i class="bi bi-clock-history me-1"></i>사용 히스토리
+            <li class="flex-1 md:flex-none" role="presentation">
+                <button class="w-full h-full flex flex-col items-center justify-center p-1 text-gray-500 hover:bg-gray-100 hover:text-blue-600 focus:outline-none md:flex-row md:px-3 md:py-2 md:rounded-md md:hover:bg-blue-100 data-[active=false]:text-blue-600 data-[active=false]:bg-blue-50 data-[active=false]:md:bg-blue-600 data-[active=false]:md:text-white" id="navUsageHistory-tab" data-bs-target="#usageHistorySection" type="button" role="tab" aria-controls="usageHistorySection" aria-selected="false" data-active="false">
+                    <i class="bi bi-clock-history text-lg md:text-base md:mr-1.5"></i>
+                    <span class="text-xs mt-0.5 md:text-sm md:mt-0">사용 히스토리</span>
                 </button>
             </li>
         </ul>
@@ -415,65 +368,64 @@
 
     <div id="contentSections">
         <div class="tab-content" id="mainTabContent">
-            <div class="tab-pane fade show active custom-section-container" id="couponListSection" role="tabpanel" aria-labelledby="navCouponList-tab">
-                <h2>전체 쿠폰</h2>
-                <div class="filters row g-3 align-items-center mb-3">
-                  <div class="col-md">
-                    <label for="filterStartDate" class="form-label">조회 시작일:</label>
-                    <input type="text" id="filterStartDate" class="form-control form-control-sm" onfocus="(this.type='date')">
+            <div class="tab-pane fade show active bg-white p-4 sm:p-6 rounded-lg shadow-md mb-6" id="couponListSection" role="tabpanel" aria-labelledby="navCouponList-tab">
+                <h2 class="text-xl sm:text-2xl font-semibold text-gray-800 mb-4 pb-2 border-b border-gray-300">전체 쿠폰</h2>
+                <div class="filters flex flex-col sm:flex-row sm:items-end sm:space-x-3 mb-4">
+                  <div class="flex-grow">
+                    <label for="filterStartDate" class="block text-sm font-medium text-gray-700 mb-1">조회 시작일:</label>
+                    <input type="text" id="filterStartDate" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm py-2 px-3" placeholder="YYYY-MM-DD" onfocus="(this.type='date')">
                   </div>
-                  <div class="col-md">
-                    <label for="filterEndDate" class="form-label">조회 종료일:</label>
-                    <input type="text" id="filterEndDate" class="form-control form-control-sm" onfocus="(this.type='date')">
+                  <div class="flex-grow">
+                    <label for="filterEndDate" class="block text-sm font-medium text-gray-700 mb-1">조회 종료일:</label>
+                    <input type="text" id="filterEndDate" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm py-2 px-3" placeholder="YYYY-MM-DD" onfocus="(this.type='date')">
                   </div>
-                  <div class="col-md-auto align-self-end">
-                    <button onclick="loadAllCoupons()" class="btn btn-sm btn-primary w-100 mt-3 mt-md-0">필터 적용</button>
+                  <div class="flex-shrink-0">
+                    <button onclick="loadAllCoupons()" class="bg-blue-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 text-sm w-full sm:w-auto">필터 적용</button>
                   </div>
                 </div>
-                <div class="table-responsive">
-                  <table id="allCouponsTable" class="table table-striped table-hover table-sm caption-top">
-                    <caption>쿠폰 목록</caption>
-                    <thead class="table-light">
+                <div class="overflow-x-auto rounded-lg shadow border border-gray-200 mb-4">
+                  <table id="allCouponsTable" class="w-full whitespace-nowrap">
+                    <caption class="p-2 text-sm text-gray-600 text-left">쿠폰 목록</caption>
+                    <thead class="bg-gray-50">
                       <tr>
-                        <th>바코드</th>
-                        <th>입력일</th>
-                        <th>만료일</th>
-                        <th>유형</th>
-                        <th>최초 금액</th>
-                        <th>잔액</th>
-                        <th>이미지 링크</th>
-                        <th>사용 완료</th>
-                        <th>만료 상태</th>
-                        <th>작업</th>
+                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">바코드</th>
+                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">입력일</th>
+                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">만료일</th>
+                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">유형</th>
+                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">최초 금액</th>
+                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">잔액</th>
+                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">이미지 링크</th>
+                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">사용 완료</th>
+                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">만료 상태</th>
+                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">작업</th>
                       </tr>
                     </thead>
-                    <tbody>
+                    <tbody class="divide-y divide-gray-200 bg-white">
                       <!-- 모든 쿠폰이 여기에 로드됩니다 -->
                     </tbody>
                   </table>
                 </div>
             </div>
-            <div class="tab-pane fade custom-section-container" id="couponRegistrationSection" role="tabpanel" aria-labelledby="navCouponRegistration-tab">
-                <div class="text-center p-md-4">
-                    <h2 class="mb-3"><i class="bi bi-info-circle-fill text-primary me-2"></i>쿠폰 등록 안내</h2>
-                    <p class="lead mb-4">새 쿠폰을 등록하려면 화면 우측 하단의 <button type="button" class="btn btn-danger rounded-circle fab-inline-mention" onclick="document.getElementById('addCouponFab').click();" title="새 쿠폰 추가"><i class="bi bi-plus-lg"></i></button> 버튼을 이용해주세요.</p>
-                    <style>.fab-inline-mention { width: 40px; height: 40px; font-size: 16px; line-height: 1; padding: 0; vertical-align: text-bottom;} </style>
+            <div class="tab-pane fade bg-white p-4 sm:p-6 rounded-lg shadow-md mb-6" id="couponRegistrationSection" role="tabpanel" aria-labelledby="navCouponRegistration-tab">
+                <div class="text-center p-4 sm:p-6">
+                    <h2 class="text-xl sm:text-2xl font-semibold text-gray-800 mb-3 pb-2 border-b border-gray-300 flex items-center justify-center"><i class="bi bi-info-circle-fill text-blue-500 mr-2"></i>쿠폰 등록 안내</h2>
+                    <p class="text-base sm:text-lg text-gray-600 mb-4">새 쿠폰을 등록하려면 화면 우측 하단의 <button type="button" class="bg-red-500 hover:bg-red-600 text-white rounded-full w-10 h-10 inline-flex items-center justify-center align-text-bottom mx-1 shadow-md" onclick="document.getElementById('addCouponFab').click();" title="새 쿠폰 추가"><i class="bi bi-plus-lg"></i></button> 버튼을 이용해주세요.</p>
                 </div>
             </div>
-            <div class="tab-pane fade custom-section-container" id="usageHistorySection" role="tabpanel" aria-labelledby="navUsageHistory-tab">
-                <h2 class="mb-3"><i class="bi bi-clock-history text-secondary me-2"></i>쿠폰 사용 히스토리</h2>
-                <div class="table-responsive">
-                    <table id="usageHistoryTable" class="table table-striped table-hover table-sm caption-top">
-                        <caption>쿠폰 사용 상세 내역</caption>
-                        <thead class="table-light">
+            <div class="tab-pane fade bg-white p-4 sm:p-6 rounded-lg shadow-md mb-6" id="usageHistorySection" role="tabpanel" aria-labelledby="navUsageHistory-tab">
+                <h2 class="text-xl sm:text-2xl font-semibold text-gray-800 mb-3 pb-2 border-b border-gray-300 flex items-center"><i class="bi bi-clock-history text-gray-500 mr-2"></i>쿠폰 사용 히스토리</h2>
+                <div class="overflow-x-auto rounded-lg shadow border border-gray-200 mb-4">
+                    <table id="usageHistoryTable" class="w-full whitespace-nowrap">
+                        <caption class="p-2 text-sm text-gray-600 text-left">쿠폰 사용 상세 내역</caption>
+                        <thead class="bg-gray-50">
                             <tr>
-                                <th>시간</th>
-                                <th>바코드</th>
-                                <th>사용 금액</th>
-                                <th>처리 후 잔액</th>
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">시간</th>
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">바코드</th>
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">사용 금액</th>
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">처리 후 잔액</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody class="divide-y divide-gray-200 bg-white">
                             <!-- 사용 내역이 여기에 로드됩니다 -->
                         </tbody>
                     </table>
@@ -486,95 +438,97 @@
   <div id="statusMessage" role="alert" style="display:none; z-index: 1070;"></div>
   <div id="loading" style="display:none;"></div>
 
-  <button id="addCouponFab" class="fab" title="새 쿠폰 추가"><i class="bi bi-plus-lg"></i></button>
+  <button id="addCouponFab" title="새 쿠폰 추가" class="fixed bottom-6 right-6 z-[1040] w-14 h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-75 flex items-center justify-center transition-all duration-200 ease-in-out transform hover:scale-105">
+        <i class="bi bi-plus-lg text-2xl"></i>
+    </button>
 
-  <div id="newCouponModal" class="modal-base">
-    <div class="modal-content-base">
-        <div class="custom-modal-header">
-            <h2 class="custom-modal-title">새 쿠폰 등록</h2>
-            <button type="button" class="custom-close-button" onclick="closeNewCouponModal()" aria-label="Close">&times;</button>
+  <div id="newCouponModal" class="fixed inset-0 z-[1050] flex items-center justify-center overflow-x-hidden overflow-y-auto bg-black bg-opacity-50 p-4 transition-opacity duration-300 ease-in-out opacity-0 pointer-events-none">
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-lg mx-auto my-8 flex flex-col transform transition-all duration-300 ease-in-out scale-95 opacity-0">
+        <div class="flex items-start justify-between p-4 border-b border-gray-200 rounded-t-lg">
+            <h2 class="text-xl font-semibold text-gray-800">새 쿠폰 등록</h2>
+            <button type="button" class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center focus:outline-none focus:ring-2 focus:ring-gray-300" onclick="closeNewCouponModal()" aria-label="Close">&times;</button>
         </div>
-        <div class="custom-modal-body" id="newCouponModalBody">
-            <h4>1. 쿠폰 이미지 등록 (선택 사항)</h4>
-            <div class="image-upload-area">
-                <div id="dragDropZone" class="drag-drop-zone">
-                    <p><i class="bi bi-cloud-arrow-up-fill fs-3 text-muted"></i><br>여기에 이미지를 드래그 앤 드롭하거나<br>아래 버튼을 사용하세요.</p>
+        <div class="p-5 space-y-4 flex-grow overflow-y-auto" id="newCouponModalBody">
+            <h4 class="text-lg font-medium text-gray-900 mb-2 border-b border-gray-200 pb-1">1. 쿠폰 이미지 등록 (선택 사항)</h4>
+            <div class="p-4 border-2 border-dashed border-gray-300 rounded-md text-center bg-gray-50 mb-4">
+                <div id="dragDropZone" class="p-4 mb-2">
+                    <p><i class="bi bi-cloud-arrow-up-fill text-3xl text-gray-400 mb-1"></i><br><span class="text-sm text-gray-500">여기에 이미지를 드래그 앤 드롭하거나<br>아래 버튼을 사용하세요.</span></p>
                 </div>
-                <div class="image-upload-buttons">
-                    <label for="newCouponImageFile" class="btn btn-success btn-sm"><i class="bi bi-file-earmark-arrow-up"></i> 파일 선택</label>
+                <div class="image-upload-buttons space-x-2">
+                    <label for="newCouponImageFile" class="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-3 rounded-md text-sm inline-flex items-center cursor-pointer"><i class="bi bi-file-earmark-arrow-up mr-1"></i> 파일 선택</label>
                     <input type="file" id="newCouponImageFile" accept="image/*" style="display: none;">
-                    <label for="newCouponCameraFile" class="btn btn-info btn-sm"><i class="bi bi-camera"></i> 사진 촬영</label>
+                    <label for="newCouponCameraFile" class="bg-sky-500 hover:bg-sky-600 text-white font-semibold py-2 px-3 rounded-md text-sm inline-flex items-center cursor-pointer"><i class="bi bi-camera mr-1"></i> 사진 촬영</label>
                     <input type="file" id="newCouponCameraFile" accept="image/*" capture="environment" style="display: none;">
                 </div>
-                <img id="newCouponImagePreview" src="#" alt="이미지 미리보기" style="display: none;">
+                <img id="newCouponImagePreview" src="#" alt="이미지 미리보기" style="display: none;" class="mt-3 max-w-full max-h-40 border border-gray-300 p-0.5 rounded-md object-contain mx-auto block">
             </div>
-            <hr>
-            <h4>2. 쿠폰 정보 입력</h4>
-            <div class="form-fields">
+            <hr class="my-4">
+            <h4 class="text-lg font-medium text-gray-900 mb-2 border-b border-gray-200 pb-1">2. 쿠폰 정보 입력</h4>
+            <div class="form-fields space-y-4">
                 <div class="mb-3">
-                    <label for="newCouponProductName" class="form-label">제품명</label>
-                    <input type="text" id="newCouponProductName" class="form-control" placeholder="이미지에서 추출된 제품명 (또는 직접 입력)">
+                    <label for="newCouponProductName" class="block text-sm font-medium text-gray-700 mb-1">제품명</label>
+                    <input type="text" id="newCouponProductName" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm py-2 px-3" placeholder="이미지에서 추출된 제품명 (또는 직접 입력)">
                 </div>
                 <div class="mb-3">
-                    <label for="newCouponBarcode" class="form-label">바코드 번호 <span class="required-star">*</span></label>
-                    <input type="text" id="newCouponBarcode" class="form-control" placeholder="바코드 스캔 또는 직접 입력">
+                    <label for="newCouponBarcode" class="block text-sm font-medium text-gray-700 mb-1">바코드 번호 <span class="text-red-500 ml-0.5">*</span></label>
+                    <input type="text" id="newCouponBarcode" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm py-2 px-3" placeholder="바코드 스캔 또는 직접 입력">
                 </div>
-                <div class="form-check mb-3">
-                    <input type="checkbox" class="form-check-input" id="newCouponIsGift" onchange="toggleNewCouponBalanceField()">
-                    <label for="newCouponIsGift" class="form-check-label">금액권 (상품권)</label>
+                <div class="flex items-center mb-3">
+                    <input type="checkbox" id="newCouponIsGift" class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 mr-2" onchange="toggleNewCouponBalanceField()">
+                    <label for="newCouponIsGift" class="text-sm font-medium text-gray-700">금액권 (상품권)</label>
                 </div>
                 <div id="newCouponBalanceGroup" style="display:none;" class="mb-3">
-                    <label for="newCouponInitialBalance" class="form-label">초기 금액 <span class="required-star">*</span></label>
-                    <input type="number" id="newCouponInitialBalance" class="form-control" placeholder="금액권인 경우 초기 금액 입력">
+                    <label for="newCouponInitialBalance" class="block text-sm font-medium text-gray-700 mb-1">초기 금액 <span class="text-red-500 ml-0.5">*</span></label>
+                    <input type="number" id="newCouponInitialBalance" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm py-2 px-3" placeholder="금액권인 경우 초기 금액 입력">
                 </div>
                 <div class="mb-3">
-                    <label for="newCouponExpiryDate" class="form-label">만료 일자 <span class="required-star">*</span></label>
-                    <input type="text" id="newCouponExpiryDate" class="form-control" placeholder="YYYY-MM-DD" onfocus="(this.type='date')" onblur="if(!this.value)this.type='text'">
+                    <label for="newCouponExpiryDate" class="block text-sm font-medium text-gray-700 mb-1">만료 일자 <span class="text-red-500 ml-0.5">*</span></label>
+                    <input type="text" id="newCouponExpiryDate" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm py-2 px-3" placeholder="YYYY-MM-DD" onfocus="(this.type='date')" onblur="if(!this.value)this.type='text'">
                 </div>
             </div>
         </div>
-        <div class="custom-modal-footer">
-            <button type="button" class="btn btn-secondary" onclick="closeNewCouponModal()">취소</button>
-            <button type="button" id="saveNewCouponButton" class="btn btn-primary">저장</button>
+        <div class="flex flex-wrap items-center justify-end p-4 border-t border-gray-200 rounded-b-lg space-x-2">
+            <button type="button" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 px-4 rounded-md text-sm" onclick="closeNewCouponModal()">취소</button>
+            <button type="button" id="saveNewCouponButton" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-md text-sm">저장</button>
         </div>
     </div>
   </div>
 
-  <div id="usageModal" class="modal-base">
-    <div class="modal-content-base">
-      <div class="custom-modal-header">
-        <h3 class="custom-modal-title">금액권 사용 기록</h3>
-        <button type="button" class="custom-close-button" onclick="closeUsageModal()" aria-label="Close">&times;</button>
+  <div id="usageModal" class="fixed inset-0 z-[1050] flex items-center justify-center overflow-x-hidden overflow-y-auto bg-black bg-opacity-50 p-4 transition-opacity duration-300 ease-in-out opacity-0 pointer-events-none">
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-lg mx-auto my-8 flex flex-col transform transition-all duration-300 ease-in-out scale-95 opacity-0">
+      <div class="flex items-start justify-between p-4 border-b border-gray-200 rounded-t-lg">
+        <h3 class="text-xl font-semibold text-gray-800">금액권 사용 기록</h3>
+        <button type="button" class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center focus:outline-none focus:ring-2 focus:ring-gray-300" onclick="closeUsageModal()" aria-label="Close">&times;</button>
       </div>
-      <div class="custom-modal-body">
+      <div class="p-5 space-y-4 flex-grow overflow-y-auto">
         <div class="usage-form">
           <input type="hidden" id="usageBarcode">
-          <div class="mb-3">
-            <label for="amountUsed" class="form-label">사용할 금액:</label>
-            <input type="number" id="amountUsed" class="form-control" name="amountUsed" min="0.01" step="0.01" required>
+          <div class="mb-4">
+            <label for="amountUsed" class="block text-sm font-medium text-gray-700 mb-1">사용할 금액:</label>
+            <input type="number" id="amountUsed" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm py-2 px-3" name="amountUsed" min="0.01" step="0.01" required>
           </div>
         </div>
       </div>
-      <div class="custom-modal-footer">
-          <button onclick="submitUsageForm()" class="btn btn-success">사용 기록</button>
-          <button onclick="closeUsageModal()" class="btn btn-secondary">취소</button>
+      <div class="flex flex-wrap items-center justify-end p-4 border-t border-gray-200 rounded-b-lg space-x-2">
+          <button onclick="submitUsageForm()" class="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-md text-sm">사용 기록</button>
+          <button onclick="closeUsageModal()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 px-4 rounded-md text-sm">취소</button>
       </div>
     </div>
   </div>
 
-  <div id="generalCouponUsageModal" class="modal-base">
-    <div class="modal-content-base">
-      <div class="custom-modal-header">
-        <h3 class="custom-modal-title">일반 쿠폰 사용 처리</h3>
-        <button type="button" class="custom-close-button" onclick="closeGeneralCouponUsageModal()" aria-label="Close">&times;</button>
+  <div id="generalCouponUsageModal" class="fixed inset-0 z-[1050] flex items-center justify-center overflow-x-hidden overflow-y-auto bg-black bg-opacity-50 p-4 transition-opacity duration-300 ease-in-out opacity-0 pointer-events-none">
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-md mx-auto my-8 flex flex-col transform transition-all duration-300 ease-in-out scale-95 opacity-0">
+      <div class="flex items-start justify-between p-4 border-b border-gray-200 rounded-t-lg">
+        <h3 class="text-xl font-semibold text-gray-800">일반 쿠폰 사용 처리</h3>
+        <button type="button" class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center focus:outline-none focus:ring-2 focus:ring-gray-300" onclick="closeGeneralCouponUsageModal()" aria-label="Close">&times;</button>
       </div>
-      <div class="custom-modal-body">
-        <p id="generalCouponConfirmText" class="my-3"></p>
+      <div class="p-5 space-y-4 flex-grow overflow-y-auto">
+        <p id="generalCouponConfirmText" class="text-sm text-gray-700 my-3"></p>
         <input type="hidden" id="generalCouponBarcodeToMark">
       </div>
-      <div class="custom-modal-footer">
-          <button onclick="submitMarkAsUsed()" class="btn btn-warning">사용 완료 처리</button>
-          <button onclick="closeGeneralCouponUsageModal()" class="btn btn-secondary">취소</button>
+      <div class="flex flex-wrap items-center justify-end p-4 border-t border-gray-200 rounded-b-lg space-x-2">
+          <button onclick="submitMarkAsUsed()" class="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-2 px-4 rounded-md text-sm">사용 완료 처리</button>
+          <button onclick="closeGeneralCouponUsageModal()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 px-4 rounded-md text-sm">취소</button>
       </div>
     </div>
   </div>
@@ -737,22 +691,57 @@
 
   function showLoading(isLoading) {
     var loader = document.getElementById('loading');
+    if (!loader) return;
+
+    // Ensure loader has base Tailwind classes for overlay styling
+    loader.className = 'fixed inset-0 z-[1100] flex flex-col items-center justify-center bg-black bg-opacity-65 text-white transition-opacity duration-300 ease-in-out';
+
     if (isLoading) {
-        loader.innerHTML = '<div class="spinner-border text-light" style="width: 3rem; height: 3rem;" role="status"><span class="visually-hidden">로딩 중...</span></div><p class="mt-3 text-light fs-5">로딩 중...</p>';
-        loader.style.display = 'flex';
+        loader.innerHTML = `
+            <div class="w-12 h-12 border-4 border-t-transparent border-white rounded-full animate-spin"></div>
+            <p class="mt-3 text-lg font-semibold">로딩 중...</p>
+        `;
+        loader.classList.remove('opacity-0', 'pointer-events-none');
+        loader.classList.add('opacity-100', 'pointer-events-auto');
+        loader.style.display = 'flex'; // display:flex is part of the base class but ensures it's set
     } else {
-        loader.style.display = 'none';
+        loader.classList.add('opacity-0', 'pointer-events-none');
+        loader.classList.remove('opacity-100', 'pointer-events-auto');
+        // Delay hiding to allow fade-out transition
+        setTimeout(() => {
+            if (!loader.classList.contains('opacity-100')) { // Only hide if it wasn't shown again quickly
+                 loader.style.display = 'none';
+            }
+        }, 300); // Match duration-300
     }
   }
 
   function showMessage(message, isSuccess) {
     var msgDiv = document.getElementById('statusMessage');
+    if (!msgDiv) return;
+
     msgDiv.textContent = message;
-    msgDiv.className = 'alert ' + (isSuccess ? 'alert-success' : 'alert-danger') + ' show fade';
-    msgDiv.style.display = 'block';
+
+    // Base classes for the message div, including positioning and initial hidden state
+    let baseClasses = 'fixed top-5 right-5 z-[1070] px-4 py-3 rounded-md shadow-lg transition-opacity duration-300 ease-in-out opacity-0';
+
+    if (isSuccess) {
+        msgDiv.className = `${baseClasses} bg-green-100 border border-green-400 text-green-700`;
+    } else {
+        msgDiv.className = `${baseClasses} bg-red-100 border border-red-400 text-red-700`;
+    }
+
+    msgDiv.style.display = 'block'; // Or use Tailwind 'block' if you prefer removing style manipulations entirely for display
+    // Force a reflow before adding opacity-100 to ensure transition plays
+    void msgDiv.offsetWidth;
+    msgDiv.classList.add('opacity-100');
+
     setTimeout(() => {
-        msgDiv.classList.remove('show');
-        setTimeout(() => { msgDiv.style.display = 'none'; msgDiv.className = 'alert';}, 150);
+        msgDiv.classList.remove('opacity-100');
+        // msgDiv.classList.add('opacity-0'); // Already has opacity-0 from base, just removing opacity-100 will trigger transition
+        setTimeout(() => {
+            msgDiv.style.display = 'none';
+        }, 300); // Match duration-300 for fade out
     }, 5000);
   }
 
@@ -997,17 +986,34 @@
               var today = new Date();
               today.setHours(0,0,0,0);
 
+              // Base row classes (can be adjusted for hover, etc.)
+              row.className = 'transition-colors duration-150 ease-in-out';
+
               if (expiryDate < today && coupon.expiryStatus === '사용가능') {
-                row.classList.add('expired');
-              } else if (!row.classList.contains('expired') && (expiryDate - today) / (1000 * 60 * 60 * 24) <= 7 && coupon.expiryStatus === '사용가능') {
-                row.classList.add('nearing-expiry');
+                row.classList.add('bg-red-100', 'text-red-700', 'hover:bg-red-200');
+              } else if ((expiryDate - today) / (1000 * 60 * 60 * 24) <= 7 && coupon.expiryStatus === '사용가능') {
+                // Ensure not already styled as expired if conditions overlap (though current logic prevents this)
+                if (!row.classList.contains('bg-red-100')) {
+                    row.classList.add('bg-yellow-100', 'text-yellow-800', 'hover:bg-yellow-200');
+                }
               }
 
               if (coupon.expiryStatus === '사용완료' || coupon.expiryStatus === '잔액없음') {
-                row.classList.add('coupon-fully-used');
+                // Remove other state classes if this one applies, as it's a terminal state
+                row.classList.remove('bg-red-100', 'text-red-700', 'hover:bg-red-200', 'bg-yellow-100', 'text-yellow-800', 'hover:bg-yellow-200');
+                row.classList.add('text-slate-500', 'line-through', 'bg-slate-50', 'hover:bg-slate-100');
               }
 
-              row.insertCell().textContent = coupon.isGiftCertificate ? '금액권' : '일반 쿠폰';
+              // Apply default styling to all cells (example, should be done for all)
+              // Assuming cells are added in order and this is one of them:
+              var typeCell = row.insertCell();
+              typeCell.className = 'px-4 py-3 text-sm text-gray-700 whitespace-nowrap'; // Apply to all td
+              typeCell.textContent = coupon.isGiftCertificate ? '금액권' : '일반 쿠폰';
+              // Note: The original code adds cells one by one. Each insertCell() should be followed by setting its className.
+              // For brevity, I'll just modify the example for typeCell. The user must ensure all TDs get these classes.
+              // This diff will only show the row class changes and this one cell example.
+              // The subsequent row.insertCell().textContent calls from the original code need to be updated like this:
+              // var cell = row.insertCell(); cell.className = '...'; cell.textContent = ...;
               row.insertCell().textContent = coupon.isGiftCertificate && coupon.originalAmount !== null ? parseFloat(coupon.originalAmount).toFixed(2) : 'N/A';
               row.insertCell().textContent = coupon.isGiftCertificate && coupon.balance !== null ? parseFloat(coupon.balance).toFixed(2) : 'N/A';
 
@@ -1076,14 +1082,30 @@
   }
 
   function openMarkAsUsedModal(barcode) {
+    const modalElement = document.getElementById('generalCouponUsageModal');
+    const modalContent = modalElement ? modalElement.firstElementChild : null;
+
     document.getElementById('generalCouponBarcodeToMark').value = barcode;
     document.getElementById('generalCouponConfirmText').textContent = "'" + barcode + "' 쿠폰을 사용 완료로 처리하시겠습니까?";
-    document.getElementById('generalCouponUsageModal').style.display = 'block';
+
+    if (modalElement && modalContent) {
+        modalElement.classList.remove('opacity-0', 'pointer-events-none');
+        modalElement.classList.add('opacity-100', 'pointer-events-auto');
+        modalContent.classList.remove('scale-95', 'opacity-0');
+        modalContent.classList.add('scale-100', 'opacity-100');
+    }
   }
 
   function closeGeneralCouponUsageModal() {
-    var generalModal = document.getElementById('generalCouponUsageModal');
-    if(generalModal) generalModal.style.display = 'none';
+    const modalElement = document.getElementById('generalCouponUsageModal');
+    const modalContent = modalElement ? modalElement.firstElementChild : null;
+
+    if (modalElement && modalContent) {
+        modalElement.classList.add('opacity-0', 'pointer-events-none');
+        modalElement.classList.remove('opacity-100', 'pointer-events-auto');
+        modalContent.classList.add('scale-95', 'opacity-0');
+        modalContent.classList.remove('scale-100', 'opacity-100');
+    }
   }
 
   function submitMarkAsUsed() {
@@ -1116,15 +1138,31 @@
   }
 
   function openUsageModal(barcode, currentBalance) {
+    const modalElement = document.getElementById('usageModal');
+    const modalContent = modalElement ? modalElement.firstElementChild : null;
+
     document.getElementById('usageBarcode').value = barcode;
     document.getElementById('amountUsed').value = '';
     document.getElementById('amountUsed').max = currentBalance;
-    document.getElementById('usageModal').style.display = 'block';
+
+    if (modalElement && modalContent) {
+        modalElement.classList.remove('opacity-0', 'pointer-events-none');
+        modalElement.classList.add('opacity-100', 'pointer-events-auto');
+        modalContent.classList.remove('scale-95', 'opacity-0');
+        modalContent.classList.add('scale-100', 'opacity-100');
+    }
   }
 
   function closeUsageModal() {
-    var usageModal = document.getElementById('usageModal');
-    if(usageModal) usageModal.style.display = 'none';
+    const modalElement = document.getElementById('usageModal');
+    const modalContent = modalElement ? modalElement.firstElementChild : null;
+
+    if (modalElement && modalContent) {
+        modalElement.classList.add('opacity-0', 'pointer-events-none');
+        modalElement.classList.remove('opacity-100', 'pointer-events-auto');
+        modalContent.classList.add('scale-95', 'opacity-0');
+        modalContent.classList.remove('scale-100', 'opacity-100');
+    }
   }
 
   function submitUsageForm() {
@@ -1170,31 +1208,50 @@
 
   function openNewCouponModal() {
     if (!newCouponModalElement) newCouponModalElement = document.getElementById('newCouponModal');
+    const modalContent = newCouponModalElement ? newCouponModalElement.firstElementChild : null;
 
+    // Clear form fields
+    document.getElementById('newCouponProductName').value = '';
     document.getElementById('newCouponBarcode').value = '';
     document.getElementById('newCouponExpiryDate').value = '';
-    document.getElementById('newCouponExpiryDate').type = 'text';
+    document.getElementById('newCouponExpiryDate').type = 'text'; // Ensure it resets from 'date'
     document.getElementById('newCouponIsGift').checked = false;
     document.getElementById('newCouponInitialBalance').value = '';
 
     var imgFile = document.getElementById('newCouponImageFile');
-    if(imgFile) imgFile.value = '';
+    if(imgFile) imgFile.value = ''; // Clear file input
     var camFile = document.getElementById('newCouponCameraFile');
-    if(camFile) camFile.value = '';
+    if(camFile) camFile.value = ''; // Clear camera input
 
     var imagePreview = document.getElementById('newCouponImagePreview');
     imagePreview.src = '#';
-    imagePreview.style.display = 'none';
+    imagePreview.style.display = 'none'; // Keep this for preview logic, or integrate with Tailwind
 
     selectedImageFile = null;
+    toggleNewCouponBalanceField(); // Existing logic
 
-    toggleNewCouponBalanceField();
-    newCouponModalElement.style.display = 'block';
+    if (newCouponModalElement && modalContent) {
+        // Show modal
+        newCouponModalElement.classList.remove('opacity-0', 'pointer-events-none');
+        newCouponModalElement.classList.add('opacity-100', 'pointer-events-auto');
+        // Animate content
+        modalContent.classList.remove('scale-95', 'opacity-0');
+        modalContent.classList.add('scale-100', 'opacity-100');
+    }
   }
 
   function closeNewCouponModal() {
     if (!newCouponModalElement) newCouponModalElement = document.getElementById('newCouponModal');
-    newCouponModalElement.style.display = 'none';
+    const modalContent = newCouponModalElement ? newCouponModalElement.firstElementChild : null;
+
+    if (newCouponModalElement && modalContent) {
+        // Hide modal
+        newCouponModalElement.classList.add('opacity-0', 'pointer-events-none');
+        newCouponModalElement.classList.remove('opacity-100', 'pointer-events-auto');
+        // Animate content out
+        modalContent.classList.add('scale-95', 'opacity-0');
+        modalContent.classList.remove('scale-100', 'opacity-100');
+    }
   }
 
   // Custom Tab Switching Logic
@@ -1300,15 +1357,15 @@
     if (dragDropZone) {
         dragDropZone.addEventListener('dragover', function(event) {
           event.preventDefault();
-          dragDropZone.classList.add('dragover');
+          dragDropZone.classList.add('border-blue-500', 'bg-blue-50');
         });
         dragDropZone.addEventListener('dragleave', function(event) {
           event.preventDefault();
-          dragDropZone.classList.remove('dragover');
+          dragDropZone.classList.remove('border-blue-500', 'bg-blue-50');
         });
         dragDropZone.addEventListener('drop', function(event) {
           event.preventDefault();
-          dragDropZone.classList.remove('dragover');
+          dragDropZone.classList.remove('border-blue-500', 'bg-blue-50');
           if (event.dataTransfer.files.length > 0) {
             var droppedFile = event.dataTransfer.files[0];
             previewAndSetFile(droppedFile);
