@@ -25,6 +25,15 @@
     th { background-color: #f2f2f2; }
     .expired { background-color: #ffdddd; color: #a00000; } /* 만료된 쿠폰 스타일 */
     .nearing-expiry { background-color: #fff0dd; color: #c57500; } /* 만료 임박 쿠폰 스타일 (예: 7일 이내) */
+    .coupon-fully-used {
+      text-decoration: line-through;
+      color: grey;
+      background-color: #f0f0f0; /* Optional: slight background change */
+    }
+    .coupon-fully-used button { /* Optional: disable buttons in used rows */
+       pointer-events: none;
+       opacity: 0.5;
+    }
     .message { padding: 10px; margin-top: 10px; border-radius: 4px; }
     .success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
     .error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
@@ -57,10 +66,10 @@
             margin-top: 15px;
         }
         #allCouponsTable {
-           min-width: 600px;
+           min-width: 750px; /* Adjusted for more columns */
         }
         th, td { padding: 6px; }
-        #usageModal {
+        #usageModal, #generalCouponUsageModal { /* Apply to both modals */
             width: 90%;
             max-width: 400px;
             top: 10%;
@@ -139,6 +148,8 @@
             <th>최초 금액</th>
             <th>잔액</th>
             <th>이미지 링크</th>
+            <th>사용 완료</th>
+            <th>만료 상태</th>
             <th>작업</th>
           </tr>
         </thead>
@@ -149,7 +160,7 @@
     </div>
   </div>
 
-  <!-- 금액권 사용 기록 모달 (현재는 단순화됨) -->
+  <!-- 금액권 사용 기록 모달 -->
   <div id="usageModal" style="display:none; position:fixed; top:20%; left:50%; transform:translate(-50%, -20%); background:white; padding:20px; border:1px solid #ccc; box-shadow: 0 0 10px rgba(0,0,0,0.1); z-index:1000;">
     <h3>금액권 사용 기록</h3>
     <div class="usage-form">
@@ -161,13 +172,20 @@
     </div>
   </div>
 
+  <!-- 일반 쿠폰 사용 처리 모달 -->
+  <div id="generalCouponUsageModal" style="display:none; position:fixed; top:20%; left:50%; transform:translate(-50%, -20%); background:white; padding:20px; border:1px solid #ccc; box-shadow: 0 0 10px rgba(0,0,0,0.1); z-index:1000;">
+    <h3>일반 쿠폰 사용 처리</h3>
+    <p id="generalCouponConfirmText"></p>
+    <input type="hidden" id="generalCouponBarcodeToMark">
+    <button onclick="submitMarkAsUsed()">사용 완료 처리</button>
+    <button onclick="closeGeneralCouponUsageModal()">취소</button>
+  </div>
+
 <script>
-  // 로딩 스피너 및 메시지 표시 유틸리티 함수
   function showLoading(isLoading) {
     document.getElementById('loading').style.display = isLoading ? 'block' : 'none';
   }
 
-  // 사용자에게 메시지를 표시하는 함수
   function showMessage(message, isSuccess) {
     var msgDiv = document.getElementById('statusMessage');
     msgDiv.textContent = message;
@@ -197,7 +215,6 @@
     return d.toISOString().split('T')[0];
   }
 
-  // 선택된 이미지 파일 미리보기를 표시하는 함수
   function previewCouponImage(event) {
     var reader = new FileReader();
     var imagePreview = document.getElementById('couponImagePreview');
@@ -213,9 +230,8 @@
     }
   }
 
-  // 쿠폰 저장 양식 처리 함수 (이미지 업로드 포함)
   function saveCouponForm() {
-    showLoading(true); // 로딩 시작
+    showLoading(true);
     var barcode = document.getElementById('barcode').value;
     var expiryDateInput = document.getElementById('expiryDate').value;
     var isGift = document.getElementById('isGiftCertificate').checked;
@@ -227,7 +243,6 @@
       expiryDate: expiryDateInput,
       isGiftCertificate: isGift,
       initialBalance: isGift ? parseFloat(balance) : null
-      // imageFileId 와 imageWebViewLink 는 이미지 업로드 후 추가
     };
 
     if (!couponData.barcode || !couponData.expiryDate) {
@@ -242,12 +257,11 @@
     }
 
     if (imageFile) {
-      // 이미지 파일이 선택된 경우
       var reader = new FileReader();
       reader.onload = function(e) {
         var base64ImageData = e.target.result;
         var mimeType = base64ImageData.substring(base64ImageData.indexOf(':') + 1, base64ImageData.indexOf(';'));
-        var fileExtension = mimeType.split('/')[1] || 'png'; // 기본 확장자
+        var fileExtension = mimeType.split('/')[1] || 'png';
         var fileName = "coupon_" + couponData.barcode + "_" + new Date().getTime() + "." + fileExtension;
 
         showMessage("이미지 업로드 중...", true);
@@ -282,12 +296,10 @@
       };
       reader.readAsDataURL(imageFile);
     } else {
-      // 이미지 파일이 선택되지 않은 경우
       saveCouponDataToSheet(couponData);
     }
   }
 
-  // 쿠폰 데이터를 시트에 저장하는 헬퍼 함수
   function saveCouponDataToSheet(dataToSave) {
     google.script.run
       .withSuccessHandler(function(saveResponseString) {
@@ -319,7 +331,6 @@
       .saveCoupon(dataToSave);
   }
 
-  // 최신 쿠폰 로드 함수 (이전과 동일, 주석만 확인)
   function loadLatestCoupons() {
     showLoading(true);
     google.script.run
@@ -347,16 +358,19 @@
               if (coupon.isGiftCertificate) {
                 text += " - 잔액: " + (coupon.balance !== null ? parseFloat(coupon.balance).toFixed(2) : 'N/A');
               }
-              // 이미지 링크 추가 (선택적)
               if (coupon.imageWebViewLink) {
                  text += ' (<a href="' + coupon.imageWebViewLink + '" target="_blank">이미지 보기</a>)';
               }
-              li.innerHTML = text; // 링크를 위해 innerHTML 사용
+              li.innerHTML = text;
 
               if (expiry < today) {
                 li.classList.add('expired');
               } else if ((expiry - today) / (1000 * 60 * 60 * 24) <= 7) {
                 li.classList.add('nearing-expiry');
+              }
+              // Add class if fully used
+              if (coupon.expiryStatus === '사용완료' || coupon.expiryStatus === '잔액없음') {
+                li.classList.add('coupon-fully-used');
               }
               ul.appendChild(li);
             });
@@ -377,7 +391,6 @@
       .getLatestCoupons();
   }
 
-  // 전체 쿠폰 로드 함수 (이미지 링크 표시 추가)
   function loadAllCoupons() {
     showLoading(true);
     var filterStartDate = document.getElementById('filterStartDate').value;
@@ -393,7 +406,7 @@
             console.error("loadAllCoupons 오류: JSON 문자열이 필요하지만 다음을 받음:", jsonStringResponse);
             var row = tableBody.insertRow();
             var cell = row.insertCell();
-            cell.colSpan = 8; // Colspan 업데이트
+            cell.colSpan = 10; // Adjusted colspan
             cell.textContent = "오류: 서버로부터 잘못된 형식의 데이터가 수신되었습니다.";
             cell.style.textAlign = "center";
             return;
@@ -426,9 +439,7 @@
               if (!coupon || typeof coupon !== 'object') return;
               var row = tableBody.insertRow();
 
-              // 바코드 셀 (기존)
               row.insertCell().textContent = coupon.barcode;
-
               row.insertCell().textContent = formatDate(new Date(coupon.entryDate));
 
               var expiryCell = row.insertCell();
@@ -438,40 +449,60 @@
               var today = new Date();
               today.setHours(0,0,0,0);
 
-              if (expiryDate < today) {
+              if (expiryDate < today && coupon.expiryStatus === '사용가능') { // 만료되었지만 아직 '사용가능' 상태인 경우
                 row.classList.add('expired');
-              } else if ((expiryDate - today) / (1000 * 60 * 60 * 24) <= 7) {
+              } else if (!row.classList.contains('expired') && (expiryDate - today) / (1000 * 60 * 60 * 24) <= 7 && coupon.expiryStatus === '사용가능') {
                 row.classList.add('nearing-expiry');
+              }
+
+              if (coupon.expiryStatus === '사용완료' || coupon.expiryStatus === '잔액없음') {
+                row.classList.add('coupon-fully-used');
               }
 
               row.insertCell().textContent = coupon.isGiftCertificate ? '금액권' : '일반 쿠폰';
               row.insertCell().textContent = coupon.isGiftCertificate && coupon.originalAmount !== null ? parseFloat(coupon.originalAmount).toFixed(2) : 'N/A';
               row.insertCell().textContent = coupon.isGiftCertificate && coupon.balance !== null ? parseFloat(coupon.balance).toFixed(2) : 'N/A';
 
-              // 이미지 링크 셀 추가
               var imageLinkCell = row.insertCell();
               if (coupon.imageWebViewLink) {
                 var link = document.createElement('a');
                 link.href = coupon.imageWebViewLink;
                 link.textContent = "이미지 보기";
-                link.target = "_blank"; // 새 탭에서 열기
+                link.target = "_blank";
                 imageLinkCell.appendChild(link);
               } else {
                 imageLinkCell.textContent = "N/A";
               }
 
+              row.insertCell().textContent = coupon.isUsed ? '예' : '아니오'; // 사용 완료 여부
+              row.insertCell().textContent = coupon.expiryStatus; // 만료 상태
+
               var actionsCell = row.insertCell();
-              if (coupon.isGiftCertificate) {
-                var useButton = document.createElement('button');
-                useButton.textContent = '사용 기록';
-                useButton.onclick = function() { openUsageModal(coupon.barcode, coupon.balance); };
-                actionsCell.appendChild(useButton);
+              actionsCell.innerHTML = ''; // Clear previous buttons/text
+              if (coupon.expiryStatus === '사용가능') {
+                if (coupon.isGiftCertificate) {
+                  var useButton = document.createElement('button');
+                  useButton.textContent = '사용 기록';
+                  useButton.onclick = function() { openUsageModal(coupon.barcode, coupon.balance); };
+                  actionsCell.appendChild(useButton);
+                } else {
+                  var markUsedButton = document.createElement('button');
+                  markUsedButton.textContent = '사용 처리';
+                  markUsedButton.onclick = function() { openMarkAsUsedModal(coupon.barcode); };
+                  actionsCell.appendChild(markUsedButton);
+                }
+              } else if (coupon.expiryStatus === '잔액없음') {
+                actionsCell.textContent = "잔액 없음";
+              } else if (coupon.expiryStatus === '사용완료') {
+                actionsCell.textContent = "사용 완료됨";
+              } else {
+                 actionsCell.textContent = coupon.expiryStatus; // "만료됨" 등 기타 상태
               }
             });
           } else {
             var row = tableBody.insertRow();
             var cell = row.insertCell();
-            cell.colSpan = 8; // Colspan 업데이트
+            cell.colSpan = 10; // Adjusted colspan
             cell.textContent = "쿠폰이 없거나 필터 조건에 맞는 쿠폰이 없습니다.";
             cell.style.textAlign = "center";
           }
@@ -479,7 +510,7 @@
           console.error("loadAllCoupons JSON.parse 오류:", e, "Original response:", jsonStringResponse);
           var row = tableBody.insertRow();
           var cell = row.insertCell();
-          cell.colSpan = 8; // Colspan 업데이트
+          cell.colSpan = 10; // Adjusted colspan
           cell.textContent = "쿠폰 목록 처리 중 오류가 발생했습니다.";
           cell.style.textAlign = "center";
           showMessage("쿠폰 목록 파싱 중 오류: " + e.message, false);
@@ -490,6 +521,46 @@
         showMessage("전체 쿠폰 로딩 중 오류: " + error.message, false);
       })
       .getCoupons();
+  }
+
+  function openMarkAsUsedModal(barcode) {
+    document.getElementById('generalCouponBarcodeToMark').value = barcode;
+    document.getElementById('generalCouponConfirmText').textContent = "'" + barcode + "' 쿠폰을 사용 완료로 처리하시겠습니까?";
+    document.getElementById('generalCouponUsageModal').style.display = 'block';
+  }
+
+  function closeGeneralCouponUsageModal() {
+    document.getElementById('generalCouponUsageModal').style.display = 'none';
+  }
+
+  function submitMarkAsUsed() {
+    var barcode = document.getElementById('generalCouponBarcodeToMark').value;
+    if (!barcode) {
+      showMessage("오류: 처리할 쿠폰 바코드가 없습니다.", false);
+      return;
+    }
+    showLoading(true);
+    google.script.run
+      .withSuccessHandler(function(responseString) {
+        showLoading(false);
+        try {
+          var response = JSON.parse(responseString);
+          showMessage(response.message, response.success);
+          if (response.success) {
+            closeGeneralCouponUsageModal();
+            loadAllCoupons();
+            loadLatestCoupons();
+          }
+        } catch (e) {
+          console.error("submitMarkAsUsed JSON.parse error:", e, "Original response:", responseString);
+          showMessage("서버 응답 처리 오류: " + e.message, false);
+        }
+      })
+      .withFailureHandler(function(error) {
+        showLoading(false);
+        showMessage("쿠폰 사용 처리 중 서버 오류: " + error.message, false);
+      })
+      .markCouponAsUsed(barcode);
   }
 
   function openUsageModal(barcode, currentBalance) {

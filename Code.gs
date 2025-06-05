@@ -11,7 +11,7 @@ var USAGE_LOG_SHEET_NAME = "UsageLog"; // 사용 기록 시트 이름
  */
 function doGet(e) {
   return HtmlService.createHtmlOutputFromFile('index.html')
-      .setTitle('쿠폰 관리 시스템') // 웹 앱 제목 설정
+      .setTitle('쿠폰 관리 시스템')
       .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.DEFAULT);
 }
 
@@ -36,20 +36,16 @@ function uploadImageToDrive(base64ImageData, imageName, mimeType) {
         return JSON.stringify({ success: false, message: "이미지 데이터, 파일 이름, MIME 타입은 필수입니다."});
     }
 
-    // 데이터 URL 프리픽스 제거 (예: "data:image/png;base64,")
     var pureBase64Data = base64ImageData.includes(',') ? base64ImageData.split(',')[1] : base64ImageData;
-
     var decodedData = Utilities.base64Decode(pureBase64Data, Utilities.Charset.UTF_8);
     var blob = Utilities.newBlob(decodedData, mimeType, imageName);
-
     var file = folder.createFile(blob);
-    // file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW); // 선택 사항: 공유 설정 - 개인 정보 보호에 주의
 
-    Logger.log("이미지가 성공적으로 업로드되었습니다: " + file.getName() + ", ID: " + file.getId() + ", Link: " + file.getUrl()); // Log with getUrl()
+    Logger.log("이미지가 성공적으로 업로드되었습니다: " + file.getName() + ", ID: " + file.getId() + ", Link: " + file.getUrl());
     return JSON.stringify({
       success: true,
       fileId: file.getId(),
-      webViewLink: file.getUrl() // Changed to getUrl()
+      webViewLink: file.getUrl()
     });
 
   } catch (e) {
@@ -58,49 +54,39 @@ function uploadImageToDrive(base64ImageData, imageName, mimeType) {
   }
 }
 
-
 /**
- * 새 쿠폰을 스프레드시트에 저장합니다. 이미지 파일 ID와 링크를 포함할 수 있습니다.
- * @param {Object} couponData 쿠폰 상세 정보 객체:
- *                            {barcode: string, expiryDate: string, isGiftCertificate: boolean,
- *                             initialBalance: number | null, imageFileId?: string, imageWebViewLink?: string}
+ * 새 쿠폰을 스프레드시트에 저장합니다. 이미지 파일 ID, 링크, 사용 상태, 만료 상태를 포함합니다.
+ * @param {Object} couponData 쿠폰 상세 정보 객체
  * @return {string} JSON 문자열 형태의 성공 또는 오류 메시지 객체.
  */
 function saveCoupon(couponData) {
   try {
     var sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(COUPON_SHEET_NAME);
-    // 헤더 정의 (이미지 관련 열 추가)
-    var headers = ["바코드", "입력일", "만료일", "금액권 여부", "잔액", "최초 금액", "이미지 파일 ID", "이미지 보기 링크"];
+    var headers = ["바코드", "입력일", "만료일", "금액권 여부", "잔액", "최초 금액", "이미지 파일 ID", "이미지 보기 링크", "사용 완료", "만료 상태"];
 
     if (!sheet) {
-      // 시트가 없으면 새로 생성하고 헤더를 추가합니다.
       sheet = SpreadsheetApp.openById(SPREADSHEET_ID).insertSheet(COUPON_SHEET_NAME);
       sheet.appendRow(headers);
       Logger.log("'" + COUPON_SHEET_NAME + "' 시트가 생성되고 헤더가 추가되었습니다.");
     } else {
-      // 시트가 이미 존재하는 경우, 헤더를 확인합니다.
       if (sheet.getLastRow() > 0) {
         var currentHeaders = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
         var headersMatch = headers.length === currentHeaders.length && headers.every(function(value, index) {
           return value === currentHeaders[index];
         });
         if (!headersMatch) {
-          Logger.log("주의: '" + COUPON_SHEET_NAME + "' 시트의 헤더가 예상과 다릅니다. 현재 헤더: [" + currentHeaders.join(", ") + "], 예상 헤더: [" + headers.join(", ") + "]. 이미지 관련 기능이 올바르게 작동하지 않을 수 있습니다. 수동으로 헤더를 업데이트하거나 새 시트를 사용하세요.");
-          // 이 단계에서는 기존 시트의 헤더를 강제로 수정하지 않습니다.
-          // 필요시 사용자가 수동으로 "이미지 파일 ID", "이미지 보기 링크" 열을 추가해야 합니다.
+          Logger.log("주의: '" + COUPON_SHEET_NAME + "' 시트의 헤더가 예상과 다릅니다. 현재 헤더: [" + currentHeaders.join(", ") + "], 예상 헤더: [" + headers.join(", ") + "]. 기능이 올바르게 작동하지 않을 수 있습니다.");
         }
       } else {
-        // 시트는 존재하지만 비어있는 경우 (행이 없음), 헤더를 추가합니다.
         sheet.appendRow(headers);
         Logger.log("'" + COUPON_SHEET_NAME + "' 시트가 비어있어 헤더가 추가되었습니다.");
       }
     }
 
-    var entryDate = new Date(); // 현재 날짜를 입력일로 사용
+    var entryDate = new Date();
     var balance = couponData.isGiftCertificate ? parseFloat(couponData.initialBalance) : null;
-    var originalAmount = balance; // 참고용으로 원래 금액 저장
+    var originalAmount = balance;
 
-    // 데이터 유효성 검사
     if (!couponData.barcode || couponData.barcode.trim() === "") {
       return JSON.stringify({ success: false, message: "바코드는 필수 항목입니다." });
     }
@@ -111,21 +97,21 @@ function saveCoupon(couponData) {
     if (isNaN(expiryDateObj.getTime())) {
         return JSON.stringify({ success: false, message: "유효하지 않은 만료일 형식입니다."});
     }
-
     if (couponData.isGiftCertificate && (isNaN(balance) || balance === null || balance < 0)) {
         return JSON.stringify({ success: false, message: "금액권의 초기 금액은 0 이상의 숫자여야 합니다."});
     }
 
-    // 시트에 새 행으로 쿠폰 정보 추가
     sheet.appendRow([
       couponData.barcode,
       entryDate,
-      expiryDateObj, // Date 객체로 저장
+      expiryDateObj,
       couponData.isGiftCertificate,
       balance,
       originalAmount,
-      couponData.imageFileId || null, // 이미지 파일 ID (없으면 null)
-      couponData.imageWebViewLink || null // 이미지 보기 링크 (없으면 null)
+      couponData.imageFileId || null,
+      couponData.imageWebViewLink || null,
+      false, // 사용 완료 (기본값: false)
+      "사용가능" // 만료 상태 (기본값: "사용가능")
     ]);
     return JSON.stringify({ success: true, message: "쿠폰이 성공적으로 저장되었습니다: " + couponData.barcode });
   } catch (e) {
@@ -135,57 +121,61 @@ function saveCoupon(couponData) {
 }
 
 /**
- * 스프레드시트에서 모든 쿠폰을 가져옵니다.
- * 입력일 기준 내림차순 정렬 (최신순).
+ * 스프레드시트에서 모든 쿠폰 정보를 가져옵니다 (사용 상태 및 만료 상태 포함).
  * @return {String} 쿠폰 배열의 JSON 문자열.
  */
 function getCoupons() {
-  var returnValue = []; // 반환될 배열 초기화
+  var returnValue = [];
   try {
     var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
-    // 스프레드시트를 찾을 수 없는 경우
     if (!ss) {
-      Logger.log("getCoupons 오류: ID가 " + SPREADSHEET_ID + "인 스프레드시트를 찾을 수 없습니다. 빈 배열 문자열을 반환합니다.");
+      Logger.log("getCoupons 오류: 스프레드시트를 찾을 수 없습니다.");
     } else {
       var sheet = ss.getSheetByName(COUPON_SHEET_NAME);
-      // 쿠폰 시트를 찾을 수 없는 경우
       if (!sheet) {
-        Logger.log("getCoupons 정보: 쿠폰 시트 '" + COUPON_SHEET_NAME + "'를 찾을 수 없습니다. 빈 배열 문자열을 반환합니다.");
+        Logger.log("getCoupons 정보: 쿠폰 시트 '" + COUPON_SHEET_NAME + "'를 찾을 수 없습니다.");
       } else {
-        // 시트가 완전히 비어있는 경우 (행이 없는 경우)
         if (sheet.getLastRow() === 0) {
-          Logger.log("getCoupons 정보: 쿠폰 시트가 완전히 비어있습니다. 빈 배열 문자열을 반환합니다.");
+          Logger.log("getCoupons 정보: 쿠폰 시트가 비어있습니다.");
         } else {
           var dataRange = sheet.getDataRange();
-          // 데이터 범위가 없는 경우 (예: 시트는 있지만 데이터가 전혀 없는 경우)
           if (!dataRange) {
-            Logger.log("getCoupons 정보: 시트에서 데이터 범위를 찾을 수 없습니다. 빈 배열 문자열을 반환합니다.");
+            Logger.log("getCoupons 정보: 데이터 범위를 찾을 수 없습니다.");
           } else {
             var data = dataRange.getValues();
-            // 데이터가 없거나 헤더 행만 있는 경우
-            // 이미지 관련 열이 추가되었으므로, data[i][6] (이미지 파일 ID), data[i][7] (이미지 보기 링크)을 읽도록 인덱스 조정 필요
             if (!data || sheet.getLastRow() <= 1) {
-              Logger.log("getCoupons 정보: 실제 쿠폰 데이터가 없습니다. 마지막 행: " + sheet.getLastRow() + ". 데이터 길이: " + (data ? data.length : "null") + ". 빈 배열 문자열을 반환합니다.");
+              Logger.log("getCoupons 정보: 실제 쿠폰 데이터가 없습니다.");
             } else {
-              // 모든 검사를 통과하면 데이터를 처리합니다.
               var couponsData = [];
-              // data[0]은 헤더 행이므로 1부터 시작합니다.
+              var headers = data[0]; // 첫 번째 행을 헤더로 간주
+              // 필요한 열의 인덱스를 헤더 기반으로 찾기
+              var barcodeIdx = headers.indexOf("바코드");
+              var entryDateIdx = headers.indexOf("입력일");
+              var expiryDateIdx = headers.indexOf("만료일");
+              var isGiftCertIdx = headers.indexOf("금액권 여부");
+              var balanceIdx = headers.indexOf("잔액");
+              var originalAmountIdx = headers.indexOf("최초 금액");
+              var imageFileIdIdx = headers.indexOf("이미지 파일 ID");
+              var imageWebViewLinkIdx = headers.indexOf("이미지 보기 링크");
+              var isUsedIdx = headers.indexOf("사용 완료");
+              var expiryStatusIdx = headers.indexOf("만료 상태");
+
               for (var i = 1; i < data.length; i++) {
-                // 바코드(0번 열)가 비어있지 않은지 확인하여 유효한 행만 처리합니다.
-                if (data[i] && data[i][0] != "") {
+                if (data[i] && data[i][barcodeIdx] != "") {
                   couponsData.push({
-                    barcode: data[i][0],
-                    entryDate: data[i][1],
-                    expiryDate: data[i][2],
-                    isGiftCertificate: data[i][3],
-                    balance: data[i][4],
-                    originalAmount: data[i][5],
-                    imageFileId: data[i][6] || null, // 이미지 파일 ID
-                    imageWebViewLink: data[i][7] || null // 이미지 보기 링크
+                    barcode: data[i][barcodeIdx],
+                    entryDate: data[i][entryDateIdx],
+                    expiryDate: data[i][expiryDateIdx],
+                    isGiftCertificate: data[i][isGiftCertIdx],
+                    balance: data[i][balanceIdx],
+                    originalAmount: data[i][originalAmountIdx],
+                    imageFileId: imageFileIdIdx !== -1 ? (data[i][imageFileIdIdx] || null) : null,
+                    imageWebViewLink: imageWebViewLinkIdx !== -1 ? (data[i][imageWebViewLinkIdx] || null) : null,
+                    isUsed: isUsedIdx !== -1 ? (data[i][isUsedIdx]) : false, // 기본값 false
+                    expiryStatus: expiryStatusIdx !== -1 ? (data[i][expiryStatusIdx]) : "정보없음" // 기본값
                   });
                 }
               }
-
               couponsData.sort(function(a, b) {
                 var dateA = (a.entryDate instanceof Date) ? a.entryDate : new Date(a.entryDate);
                 var dateB = (b.entryDate instanceof Date) ? b.entryDate : new Date(b.entryDate);
@@ -204,6 +194,56 @@ function getCoupons() {
     var fallbackValue = [];
     Logger.log("getCoupons (catch) 반환 전 값 (문자열화 전): " + JSON.stringify(fallbackValue));
     return JSON.stringify(fallbackValue);
+  }
+}
+
+/**
+ * 일반 쿠폰을 사용 완료로 처리하고 만료 상태를 업데이트합니다.
+ * @param {string} barcode 처리할 쿠폰의 바코드.
+ * @return {string} JSON 문자열 형태의 결과 객체.
+ */
+function markCouponAsUsed(barcode) {
+  try {
+    var sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(COUPON_SHEET_NAME);
+    if (!sheet) {
+      return JSON.stringify({ success: false, message: "쿠폰 시트를 찾을 수 없습니다." });
+    }
+    if (sheet.getLastRow() === 0) {
+        return JSON.stringify({ success: false, message: "쿠폰 시트가 비어있습니다." });
+    }
+
+    var data = sheet.getDataRange().getValues();
+    var headers = data[0];
+    var barcodeColIdx = headers.indexOf("바코드");
+    var isGiftCertColIdx = headers.indexOf("금액권 여부");
+    var isUsedColIdx = headers.indexOf("사용 완료");
+    var expiryStatusColIdx = headers.indexOf("만료 상태");
+
+    if (barcodeColIdx === -1 || isGiftCertColIdx === -1 || isUsedColIdx === -1 || expiryStatusColIdx === -1) {
+        return JSON.stringify({ success: false, message: "시트 헤더 구성이 올바르지 않습니다. ('바코드', '금액권 여부', '사용 완료', '만료 상태' 열 필요)" });
+    }
+
+    for (var i = 1; i < data.length; i++) {
+      if (data[i][barcodeColIdx] == barcode) {
+        if (data[i][isGiftCertColIdx] === true || data[i][isGiftCertColIdx] === 'TRUE' || data[i][isGiftCertColIdx].toString().toLowerCase() === 'true') {
+          return JSON.stringify({ success: false, message: "금액권은 이 기능을 사용할 수 없습니다. '사용 기록' 기능을 이용해주세요." });
+        }
+
+        if (data[i][isUsedColIdx] === true || data[i][isUsedColIdx] === 'TRUE' || data[i][isUsedColIdx].toString().toLowerCase() === 'true') {
+            return JSON.stringify({ success: false, message: "이미 사용 완료 처리된 쿠폰입니다." });
+        }
+
+        sheet.getRange(i + 1, isUsedColIdx + 1).setValue(true);
+        sheet.getRange(i + 1, expiryStatusColIdx + 1).setValue("사용완료");
+
+        Logger.log("일반 쿠폰 사용 완료: " + barcode);
+        return JSON.stringify({ success: true, message: "'" + barcode + "' 쿠폰이 사용 완료 처리되었습니다." });
+      }
+    }
+    return JSON.stringify({ success: false, message: "바코드 '" + barcode + "'에 해당하는 쿠폰을 찾을 수 없습니다." });
+  } catch (e) {
+    Logger.log("markCouponAsUsed 오류: " + e.toString() + " 스택: " + e.stack);
+    return JSON.stringify({ success: false, message: "쿠폰 사용 완료 처리 중 오류 발생: " + e.toString() });
   }
 }
 
@@ -231,7 +271,7 @@ function getLatestCoupons() {
 }
 
 /**
- * 금액권 사용 내역을 기록하고 잔액을 업데이트합니다.
+ * 금액권 사용 내역을 기록하고 잔액을 업데이트하며, 잔액이 0이 되면 만료 상태를 업데이트합니다.
  * @param {String} barcode 금액권의 바코드.
  * @param {Number} amountUsed 사용한 금액.
  * @return {String} 성공 여부, 메시지, 새 잔액 등을 포함한 객체의 JSON 문자열.
@@ -246,17 +286,30 @@ function logGiftCertificateUsage(barcode, amountUsed) {
     if (!couponSheet) {
       return JSON.stringify({ success: false, message: "오류: 쿠폰 시트를 찾을 수 없습니다." });
     }
+    if (couponSheet.getLastRow() === 0) {
+        return JSON.stringify({ success: false, message: "오류: 쿠폰 시트가 비어있습니다." });
+    }
 
     var data = couponSheet.getDataRange().getValues();
+    var headers = data[0];
+    var barcodeColIdx = headers.indexOf("바코드");
+    var isGiftCertColIdx = headers.indexOf("금액권 여부");
+    var balanceColIdx = headers.indexOf("잔액");
+    var expiryStatusColIdx = headers.indexOf("만료 상태");
+
+    if (barcodeColIdx === -1 || isGiftCertColIdx === -1 || balanceColIdx === -1 || expiryStatusColIdx === -1) {
+        return JSON.stringify({ success: false, message: "시트 헤더 구성이 올바르지 않습니다. ('바코드', '금액권 여부', '잔액', '만료 상태' 열 필요)" });
+    }
+
     var couponRow = -1;
     var currentBalance = 0;
     var isGift = false;
 
     for (var i = 1; i < data.length; i++) {
-      if (data[i][0] == barcode) {
-        couponRow = i;
-        isGift = data[i][3];
-        currentBalance = parseFloat(data[i][4]);
+      if (data[i][barcodeColIdx] == barcode) {
+        couponRow = i; // 실제 데이터 행의 인덱스 (0부터 시작하는 배열 기준)
+        isGift = data[i][isGiftCertColIdx];
+        currentBalance = parseFloat(data[i][balanceColIdx]);
         break;
       }
     }
@@ -264,7 +317,7 @@ function logGiftCertificateUsage(barcode, amountUsed) {
     if (couponRow === -1) {
       return JSON.stringify({ success: false, message: "오류: 바코드 '" + barcode + "'에 해당하는 쿠폰을 찾을 수 없습니다." });
     }
-    if (!isGift) {
+    if (!(isGift === true || isGift === 'TRUE' || isGift.toString().toLowerCase() === 'true')) {
       return JSON.stringify({ success: false, message: "오류: 쿠폰 '" + barcode + "'은 금액권이 아닙니다." });
     }
     if (isNaN(currentBalance) || currentBalance < amountUsed) {
@@ -272,7 +325,12 @@ function logGiftCertificateUsage(barcode, amountUsed) {
     }
 
     var newBalance = currentBalance - amountUsed;
-    couponSheet.getRange(couponRow + 1, 5).setValue(newBalance);
+    couponSheet.getRange(couponRow + 1, balanceColIdx + 1).setValue(newBalance);
+
+    if (newBalance === 0) {
+        couponSheet.getRange(couponRow + 1, expiryStatusColIdx + 1).setValue("잔액없음");
+        Logger.log("금액권 잔액 없음 처리: " + barcode);
+    }
 
     var logSheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(USAGE_LOG_SHEET_NAME);
     if (!logSheet) {
@@ -281,18 +339,30 @@ function logGiftCertificateUsage(barcode, amountUsed) {
     }
     logSheet.appendRow([new Date(), barcode, amountUsed, newBalance]);
 
-    return JSON.stringify({ success: true, message: "사용 내역이 성공적으로 기록되었습니다. " + barcode + "의 새 잔액: " + newBalance.toFixed(2), newBalance: newBalance });
+    var message = "사용 내역이 성공적으로 기록되었습니다. " + barcode + "의 새 잔액: " + newBalance.toFixed(2);
+    if (newBalance === 0) {
+        message += " (잔액 소진)";
+    }
+    return JSON.stringify({ success: true, message: message, newBalance: newBalance });
   } catch (e) {
-    Logger.log("logGiftCertificateUsage 함수 오류: " + e.toString());
+    Logger.log("logGiftCertificateUsage 함수 오류: " + e.toString() + " 스택: " + e.stack);
     return JSON.stringify({ success: false, message: "사용 내역 기록 중 오류 발생: " + e.toString() });
   }
 }
 
-// 테스트용 헬퍼 함수 (선택 사항, Apps Script 편집기에서 실행 가능)
+// 테스트용 헬퍼 함수
 function testSaveCoupon() {
-  // 참고: 이제 saveCoupon 등의 함수 반환값은 JSON 문자열로 로깅됩니다.
-  Logger.log(saveCoupon({barcode: "TEST_IMG_001", expiryDate: "2025-12-31", isGiftCertificate: false, initialBalance: null, imageFileId: "someFileId", imageWebViewLink: "someLink"}));
-  Logger.log(saveCoupon({barcode: "GIFT_IMG_002", expiryDate: "2026-06-30", isGiftCertificate: true, initialBalance: 150, imageFileId: "anotherFileId", imageWebViewLink: "anotherLink"}));
+  Logger.log(saveCoupon({barcode: "NEW_COUPON_001", expiryDate: "2027-12-31", isGiftCertificate: false, initialBalance: null}));
+  Logger.log(saveCoupon({barcode: "GIFT_COUPON_003", expiryDate: "2027-06-30", isGiftCertificate: true, initialBalance: 200}));
+}
+
+function testMarkCouponAsUsed() {
+    // "NEW_COUPON_001" 쿠폰이 일반 쿠폰으로 존재해야 함
+    Logger.log(markCouponAsUsed("NEW_COUPON_001"));
+    // 이미 사용된 쿠폰 테스트
+    // Logger.log(markCouponAsUsed("NEW_COUPON_001"));
+    // 금액권 사용 시도 테스트
+    // Logger.log(markCouponAsUsed("GIFT_COUPON_003"));
 }
 
 function testGetCoupons() {
@@ -312,14 +382,13 @@ function testGetLatestCoupons() {
 }
 
 function testLogUsage() {
-  // "GIFT_IMG_002" 바코드의 쿠폰이 존재하고 금액권이며 잔액이 있는지 확인하세요.
-  // Logger.log(saveCoupon({barcode: "GIFT_IMG_002", expiryDate: "2026-06-30", isGiftCertificate: true, initialBalance: 150})); // 미리 저장되어 있지 않다면 주석 해제
-  Logger.log(logGiftCertificateUsage("GIFT_IMG_002", 30));
+  // "GIFT_COUPON_003" 쿠폰이 존재하고 잔액이 있어야 함
+  // Logger.log(saveCoupon({barcode: "GIFT_COUPON_003", expiryDate: "2027-06-30", isGiftCertificate: true, initialBalance: 200}));
+  Logger.log(logGiftCertificateUsage("GIFT_COUPON_003", 50));
+  Logger.log(logGiftCertificateUsage("GIFT_COUPON_003", 150)); // 잔액 0 만드는 테스트
 }
 
 function testUploadImage() {
-  // 이 함수를 테스트하려면 실제 base64 문자열이 필요합니다.
-  // 간단한 1x1 픽셀 PNG 이미지 Base64 예시 (실제로는 더 큰 데이터 사용)
   var testBase64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
   var testName = "testImage.png";
   var testMime = "image/png";
