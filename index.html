@@ -2,7 +2,8 @@
 <html>
 <head>
   <base target="_top">
-  <title>Coupon Management System</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>쿠폰 관리 시스템</title>
   <style>
     body { font-family: Arial, sans-serif; margin: 20px; }
     .container { margin-bottom: 30px; }
@@ -22,157 +23,220 @@
     table { width: 100%; border-collapse: collapse; margin-top: 20px; }
     th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
     th { background-color: #f2f2f2; }
-    .expired { background-color: #ffdddd; color: #a00000; } /* Past due */
-    .nearing-expiry { background-color: #fff0dd; color: #c57500; } /* Nearing expiry (e.g. within 7 days) */
+    .expired { background-color: #ffdddd; color: #a00000; } /* 만료된 쿠폰 스타일 */
+    .nearing-expiry { background-color: #fff0dd; color: #c57500; } /* 만료 임박 쿠폰 스타일 (예: 7일 이내) */
     .message { padding: 10px; margin-top: 10px; border-radius: 4px; }
     .success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
     .error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
     #loading { display: none; text-align: center; padding: 20px; }
+
+    /* 중간 크기 화면 스타일 (예: 태블릿) */
+    @media (max-width: 768px) {
+        .container { margin-bottom: 20px; }
+        /* 태블릿 화면에 맞게 폼 레이아웃 또는 테이블 폰트 크기 조정 가능 */
+    }
+
+    /* 작은 크기 화면 스타일 (예: 모바일폰) */
+    @media (max-width: 480px) {
+        body {
+          font-size: 14px; /* 모바일 기본 폰트 약간 작게 */
+          margin: 10px; /* body 마진 축소 */
+        }
+        h1 { font-size: 1.5em; }
+        h2 { font-size: 1.2em; }
+        h3 { font-size: 1.1em; }
+
+        input[type="text"], input[type="date"], input[type="number"], select, button {
+            font-size: 1em; /* 폼 요소들이 body 폰트 크기에 맞춰 스케일되도록 보장 */
+            padding: 12px; /* 터치 편의를 위해 패딩 약간 크게 */
+        }
+        label { font-size: 0.95em; margin-top: 8px; } /* 레이블 폰트 및 마진 조정 */
+
+        button { margin-top: 10px; } /* 버튼 마진 조정 */
+
+        /* 테이블 가로 스크롤 가능하게 */
+        .table-responsive-wrapper {
+            overflow-x: auto;
+            width: 100%;
+            margin-top: 15px;
+        }
+        #allCouponsTable {
+           min-width: 600px; /* 예: 테이블에 열이 많을 경우 최소 너비 설정 */
+        }
+        th, td { padding: 6px; /* 모바일에서 테이블 셀 패딩 축소 */ }
+
+        #usageModal {
+            width: 90%;
+            max-width: 400px; /* 약간 큰 소형 화면에서 너무 넓어지는 것 방지 */
+            top: 10%; /* 수직 위치 조정 */
+            left: 50%; /* 중앙 정렬 유지 */
+            transform: translateX(-50%); /* 상단 위치 조정, X축 변환만 사용 */
+            max-height: 80vh; /* 모달이 너무 길어지는 것 방지 */
+            overflow-y: auto; /* 필요시 모달 내용 스크롤 가능하게 */
+            padding: 15px;
+        }
+        .coupon-form, .usage-form, .filters {
+          padding:10px;
+          margin-bottom: 15px;
+        }
+    }
   </style>
 </head>
 <body>
-  <h1>Coupon Management System</h1>
+  <h1>쿠폰 관리 시스템</h1>
 
-  <div id="loading">Loading...</div>
+  <div id="loading">로딩 중...</div>
   <div id="statusMessage" class="message" style="display:none;"></div>
 
-  <!-- Coupon Entry Form -->
+  <!-- 새 쿠폰 입력 양식 -->
   <div class="container">
-    <h2>Add New Coupon</h2>
+    <h2>새 쿠폰 추가</h2>
     <div class="coupon-form">
-      <label for="barcode">Barcode:</label>
+      <label for="barcode">바코드:</label>
       <input type="text" id="barcode" name="barcode" required>
 
-      <label for="expiryDate">Expiration Date:</label>
+      <label for="expiryDate">만료일:</label>
       <input type="text" id="expiryDate" name="expiryDate" required onfocus="(this.type='date')">
 
 
       <input type="checkbox" id="isGiftCertificate" name="isGiftCertificate" onchange="toggleBalanceInput()">
-      <label for="isGiftCertificate" style="display:inline;">Is this a Gift Certificate?</label>
+      <label for="isGiftCertificate" style="display:inline;">금액권(상품권)인가요?</label>
 
       <div id="initialBalanceGroup" style="display:none;">
-        <label for="initialBalance">Initial Balance:</label>
+        <label for="initialBalance">초기 금액:</label>
         <input type="number" id="initialBalance" name="initialBalance" min="0" step="0.01">
       </div>
 
-      <!-- Optional: File input for image - functionality for image processing not included yet -->
+      <!-- 선택 사항: 바코드 이미지 파일 입력 - 이미지 처리 기능은 아직 포함되지 않음 -->
       <!--
-      <label for="barcodeImage">Barcode Image (Optional):</label>
+      <label for="barcodeImage">바코드 이미지 (선택):</label>
       <input type="file" id="barcodeImage" name="barcodeImage" accept="image/*">
       -->
-      <button onclick="saveCouponForm()">Save Coupon</button>
+      <button onclick="saveCouponForm()">쿠폰 저장</button>
     </div>
   </div>
 
-  <!-- Latest 5 Coupons -->
+  <!-- 최신 5개 쿠폰 목록 -->
   <div class="container">
-    <h2>Latest Coupons</h2>
+    <h2>최신 쿠폰</h2>
     <div id="latestCouponsList">
-      <!-- Latest coupons will be loaded here -->
+      <!-- 최신 쿠폰이 여기에 로드됩니다 -->
     </div>
-    <button onclick="loadLatestCoupons()">Refresh Latest</button>
+    <button onclick="loadLatestCoupons()">최신 목록 새로고침</button>
   </div>
 
-  <!-- All Coupons List -->
+  <!-- 전체 쿠폰 목록 -->
   <div class="container">
-    <h2>All Coupons</h2>
+    <h2>전체 쿠폰</h2>
     <div class="filters">
-      <label for="filterStartDate">Filter by Entry Date (Start):</label>
+      <label for="filterStartDate">조회 시작일 (입력일 기준):</label>
       <input type="text" id="filterStartDate" onfocus="(this.type='date')">
-      <label for="filterEndDate">Filter by Entry Date (End):</label>
+      <label for="filterEndDate">조회 종료일 (입력일 기준):</label>
       <input type="text" id="filterEndDate" onfocus="(this.type='date')">
-      <button onclick="loadAllCoupons()">Apply Filter / Refresh List</button>
+      <button onclick="loadAllCoupons()">필터 적용 / 목록 새로고침</button>
     </div>
-    <table id="allCouponsTable">
-      <thead>
-        <tr>
-          <th>Barcode</th>
-          <th>Entry Date</th>
-          <th>Expiration Date</th>
-          <th>Type</th>
-          <th>Original Amount</th>
-          <th>Balance</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        <!-- All coupons will be loaded here -->
-      </tbody>
-    </table>
+    <div class="table-responsive-wrapper">
+      <table id="allCouponsTable">
+        <thead>
+          <tr>
+            <th>바코드</th>
+            <th>입력일</th>
+            <th>만료일</th>
+            <th>유형</th>
+            <th>최초 금액</th>
+            <th>잔액</th>
+            <th>작업</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- 모든 쿠폰이 여기에 로드됩니다 -->
+        </tbody>
+      </table>
+    </div>
   </div>
 
-  <!-- Gift Certificate Usage Modal (simplified for now) -->
+  <!-- 금액권 사용 기록 모달 (현재는 단순화됨) -->
   <div id="usageModal" style="display:none; position:fixed; top:20%; left:50%; transform:translate(-50%, -20%); background:white; padding:20px; border:1px solid #ccc; box-shadow: 0 0 10px rgba(0,0,0,0.1); z-index:1000;">
-    <h3>Log Gift Certificate Usage</h3>
+    <h3>금액권 사용 기록</h3>
     <div class="usage-form">
       <input type="hidden" id="usageBarcode">
-      <label for="amountUsed">Amount to Use:</label>
+      <label for="amountUsed">사용할 금액:</label>
       <input type="number" id="amountUsed" name="amountUsed" min="0.01" step="0.01" required>
-      <button onclick="submitUsageForm()">Log Usage</button>
-      <button onclick="closeUsageModal()">Cancel</button>
+      <button onclick="submitUsageForm()">사용 기록</button>
+      <button onclick="closeUsageModal()">취소</button>
     </div>
   </div>
 
 <script>
-  // Utility to show loading spinner and messages
+  // 로딩 스피너 및 메시지 표시 유틸리티 함수
   function showLoading(isLoading) {
     document.getElementById('loading').style.display = isLoading ? 'block' : 'none';
   }
 
+  // 사용자에게 메시지를 표시하는 함수
+  // @param {string} message - 표시할 메시지
+  // @param {boolean} isSuccess - 성공 메시지 여부 (true면 성공, false면 오류)
   function showMessage(message, isSuccess) {
     var msgDiv = document.getElementById('statusMessage');
     msgDiv.textContent = message;
     msgDiv.className = 'message ' + (isSuccess ? 'success' : 'error');
     msgDiv.style.display = 'block';
-    setTimeout(() => { msgDiv.style.display = 'none'; }, 5000); // Hide after 5 seconds
+    setTimeout(() => { msgDiv.style.display = 'none'; }, 5000); // 5초 후 메시지 숨김
   }
 
+  // '금액권' 체크박스 상태에 따라 초기 금액 입력 필드를 표시하거나 숨기는 함수
   function toggleBalanceInput() {
     document.getElementById('initialBalanceGroup').style.display =
       document.getElementById('isGiftCertificate').checked ? 'block' : 'none';
   }
 
+  // 날짜 객체 또는 문자열을 'YYYY-MM-DD' 형식의 문자열로 변환하는 함수
+  // @param {Date|string} dateObj - 변환할 날짜 객체 또는 날짜 문자열
+  // @return {string} 'YYYY-MM-DD' 형식의 날짜 문자열
   function formatDate(dateObj) {
-    if (!dateObj) return '';
-    // Check if it's already a string that looks like a date (e.g., from date picker)
+    if (!dateObj) return ''; // 날짜 객체가 없으면 빈 문자열 반환
+    // 이미 'YYYY-MM-DD' 형식의 문자열인 경우 (예: date picker에서 직접 가져온 값)
     if (typeof dateObj === 'string') {
-        // Attempt to parse and reformat if it's not in YYYY-MM-DD
+        // YYYY-MM-DD 형식이 아닌 경우 파싱 시도
         const d = new Date(dateObj);
-        if (!isNaN(d.getTime())) {
-             return d.toISOString().split('T')[0];
+        if (!isNaN(d.getTime())) { // 유효한 날짜인지 확인
+             return d.toISOString().split('T')[0]; // ISO 문자열로 변환 후 날짜 부분만 추출
         }
-        return dateObj; // Return as is if it's a string we can't parse well or already correct
+        return dateObj; // 파싱할 수 없거나 이미 올바른 형식인 경우 그대로 반환
     }
-    // If it's a Date object from Apps Script (often comes as a complex object)
-    if (typeof dateObj === 'object' && dateObj.getTime) {
+    // Apps Script의 Date 객체인 경우 (종종 복잡한 객체로 전달됨)
+    if (typeof dateObj === 'object' && dateObj.getTime) { // Date 객체인지 확인
        return dateObj.toISOString().split('T')[0];
     }
-    // If it's from sheet (might be string or number representing date)
+    // 시트에서 가져온 날짜 (문자열 또는 숫자로 표현될 수 있음)
     const d = new Date(dateObj);
     return d.toISOString().split('T')[0];
   }
 
+  // 쿠폰 입력 양식 데이터를 서버로 전송하여 저장하는 함수
   function saveCouponForm() {
     showLoading(true);
     var barcode = document.getElementById('barcode').value;
-    var expiryDateInput = document.getElementById('expiryDate').value; // This will be yyyy-mm-dd
+    var expiryDateInput = document.getElementById('expiryDate').value; // yyyy-mm-dd 형식의 문자열
     var isGift = document.getElementById('isGiftCertificate').checked;
     var balance = document.getElementById('initialBalance').value;
 
+    // 필수 입력값 검증
     if (!barcode || !expiryDateInput) {
-      showMessage("Barcode and Expiration Date are required.", false);
+      showMessage("바코드와 만료일은 필수 항목입니다.", false);
       showLoading(false);
       return;
     }
+    // 금액권일 경우 초기 금액 검증
     if (isGift && (!balance || parseFloat(balance) < 0)) {
-        showMessage("Initial balance for gift certificate must be a non-negative number.", false);
+        showMessage("금액권의 초기 금액은 0 이상의 숫자여야 합니다.", false);
         showLoading(false);
         return;
     }
 
     var couponData = {
       barcode: barcode,
-      expiryDate: expiryDateInput, // Directly pass yyyy-mm-dd string
+      expiryDate: expiryDateInput, // yyyy-mm-dd 문자열을 직접 전달
       isGiftCertificate: isGift,
       initialBalance: isGift ? parseFloat(balance) : null
     };
@@ -182,14 +246,14 @@
         showLoading(false);
         try {
           if (typeof jsonStringResponse !== 'string') {
-            console.error("saveCouponForm Error: Expected a JSON string, received:", jsonStringResponse);
-            showMessage("Error: Invalid response from server.", false);
+            console.error("saveCouponForm 오류: JSON 문자열이 필요하지만 다음을 받음:", jsonStringResponse);
+            showMessage("오류: 서버로부터 잘못된 응답입니다.", false);
             return;
           }
-          var response = JSON.parse(jsonStringResponse); // Parse the JSON string
+          var response = JSON.parse(jsonStringResponse); // 서버로부터 받은 JSON 문자열 파싱
 
-          showMessage(response.message, response.success);
-          if (response.success) {
+          showMessage(response.message, response.success); // 서버 메시지 표시
+          if (response.success) { // 성공 시 양식 초기화 및 목록 새로고침
             document.getElementById('barcode').value = '';
             document.getElementById('expiryDate').value = '';
             document.getElementById('isGiftCertificate').checked = false;
@@ -199,71 +263,73 @@
             loadAllCoupons();
           }
         } catch (e) {
-          console.error("saveCouponForm JSON.parse error:", e, "Original response:", jsonStringResponse);
-          showMessage("Error processing server response: " + e.message, false);
+          console.error("saveCouponForm JSON.parse 오류:", e, "Original response:", jsonStringResponse);
+          showMessage("서버 응답 처리 중 오류: " + e.message, false);
         }
       })
       .withFailureHandler(function(error) {
         showLoading(false);
-        showMessage("Client-side error: " + error.message, false);
+        showMessage("클라이언트 오류: " + error.message, false);
       })
       .saveCoupon(couponData);
   }
 
+  // 최신 쿠폰 5개를 로드하여 표시하는 함수
   function loadLatestCoupons() {
     showLoading(true);
     google.script.run
       .withSuccessHandler(function(jsonStringResponse) {
         showLoading(false);
         var listDiv = document.getElementById('latestCouponsList');
-        listDiv.innerHTML = '';
+        listDiv.innerHTML = ''; // 이전 목록 지우기
         try {
           if (typeof jsonStringResponse !== 'string') {
-            console.error("loadLatestCoupons Error: Expected a JSON string, received:", jsonStringResponse);
-            listDiv.textContent = "Error: Invalid data format from server.";
+            console.error("loadLatestCoupons 오류: JSON 문자열이 필요하지만 다음을 받음:", jsonStringResponse);
+            listDiv.textContent = "오류: 서버로부터 잘못된 형식의 데이터가 수신되었습니다.";
             return;
           }
-          var coupons = JSON.parse(jsonStringResponse); // Parse the JSON string
+          var coupons = JSON.parse(jsonStringResponse); // JSON 문자열 파싱
 
           if (Array.isArray(coupons) && coupons.length > 0) {
             var ul = document.createElement('ul');
             coupons.forEach(function(coupon) {
-              // ... (existing li creation logic) ...
               var li = document.createElement('li');
               var expiry = new Date(coupon.expiryDate);
               var today = new Date();
-              today.setHours(0,0,0,0);
+              today.setHours(0,0,0,0); // 오늘 날짜 정규화 (시간 부분을 0으로 설정)
 
-              var text = coupon.barcode + " (Expires: " + formatDate(expiry) + ")";
+              var text = coupon.barcode + " (만료일: " + formatDate(expiry) + ")";
               if (coupon.isGiftCertificate) {
-                text += " - Balance: " + (coupon.balance !== null ? parseFloat(coupon.balance).toFixed(2) : 'N/A');
+                text += " - 잔액: " + (coupon.balance !== null ? parseFloat(coupon.balance).toFixed(2) : 'N/A');
               }
               li.textContent = text;
 
+              // 만료 상태에 따라 스타일 적용
               if (expiry < today) {
-                li.classList.add('expired');
-              } else if ((expiry - today) / (1000 * 60 * 60 * 24) <= 7) {
-                li.classList.add('nearing-expiry');
+                li.classList.add('expired'); // 만료됨
+              } else if ((expiry - today) / (1000 * 60 * 60 * 24) <= 7) { // 7일 이내 만료
+                li.classList.add('nearing-expiry'); // 만료 임박
               }
               ul.appendChild(li);
             });
             listDiv.appendChild(ul);
           } else {
-            listDiv.textContent = "No recent coupons found.";
+            listDiv.textContent = "최근 쿠폰이 없습니다.";
           }
         } catch (e) {
-          console.error("loadLatestCoupons JSON.parse error:", e, "Original response:", jsonStringResponse);
-          listDiv.textContent = "Error processing coupon data.";
-          showMessage("Error parsing latest coupons: " + e.message, false);
+          console.error("loadLatestCoupons JSON.parse 오류:", e, "Original response:", jsonStringResponse);
+          listDiv.textContent = "쿠폰 데이터 처리 중 오류가 발생했습니다.";
+          showMessage("최신 쿠폰 파싱 중 오류: " + e.message, false);
         }
       })
       .withFailureHandler(function(error) {
         showLoading(false);
-        showMessage("Error loading latest coupons: " + error.message, false);
+        showMessage("최신 쿠폰 로딩 중 오류: " + error.message, false);
       })
       .getLatestCoupons();
   }
 
+  // 모든 쿠폰을 로드하여 테이블에 표시하는 함수
   function loadAllCoupons() {
     showLoading(true);
     var filterStartDate = document.getElementById('filterStartDate').value;
@@ -273,45 +339,44 @@
       .withSuccessHandler(function(jsonStringResponse) {
         showLoading(false);
         var tableBody = document.getElementById('allCouponsTable').getElementsByTagName('tbody')[0];
-        tableBody.innerHTML = '';
+        tableBody.innerHTML = ''; // 이전 목록 지우기
         try {
           if (typeof jsonStringResponse !== 'string') {
-            console.error("loadAllCoupons Error: Expected a JSON string, received:", jsonStringResponse);
+            console.error("loadAllCoupons 오류: JSON 문자열이 필요하지만 다음을 받음:", jsonStringResponse);
             var row = tableBody.insertRow();
             var cell = row.insertCell();
-            cell.colSpan = 7;
-            cell.textContent = "Error: Invalid data format from server.";
+            cell.colSpan = 7; // 테이블의 전체 열 개수
+            cell.textContent = "오류: 서버로부터 잘못된 형식의 데이터가 수신되었습니다.";
             cell.style.textAlign = "center";
             return;
           }
-          var allCoupons = JSON.parse(jsonStringResponse); // Parse the JSON string
+          var allCoupons = JSON.parse(jsonStringResponse); // JSON 문자열 파싱
 
-          if (!Array.isArray(allCoupons)) {
-              console.error("loadAllCoupons Error: Parsed data is not an array:", allCoupons);
-              allCoupons = []; // Default to empty if parsing gives wrong type
+          if (!Array.isArray(allCoupons)) { // 파싱된 데이터가 배열이 아닌 경우 처리
+              console.error("loadAllCoupons 오류: 파싱된 데이터가 배열이 아님:", allCoupons);
+              allCoupons = []; // 오류 시 빈 배열로 처리하여 이후 로직에서 에러 방지
           }
 
+          // 입력된 날짜 필터를 사용하여 쿠폰 필터링
           var filteredCoupons = allCoupons.filter(function(coupon) {
-              // ... (existing filter logic, ensure coupon properties are accessed safely) ...
-              if (!coupon || typeof coupon !== 'object') return false;
-              var entry = coupon.entryDate ? new Date(coupon.entryDate) : null;
-              if (!entry) return false;
+            if (!coupon || typeof coupon !== 'object') return false; // 유효하지 않은 쿠폰 객체 건너뛰기
+            var entry = coupon.entryDate ? new Date(coupon.entryDate) : null;
+            if (!entry) return false; // 입력일이 없는 쿠폰 건너뛰기
 
-              if (filterStartDate && entry < new Date(filterStartDate)) {
-                  return false;
-              }
-              if (filterEndDate) {
-                  let endDate = new Date(filterEndDate);
-                  endDate.setHours(23,59,59,999);
-                  if (entry > endDate) return false;
-              }
-              return true;
+            if (filterStartDate && entry < new Date(filterStartDate)) {
+                return false;
+            }
+            if (filterEndDate) {
+                let endDate = new Date(filterEndDate);
+                endDate.setHours(23,59,59,999); // 종료일의 마지막 시간까지 포함
+                if (entry > endDate) return false;
+            }
+            return true;
           });
 
           if (filteredCoupons.length > 0) {
             filteredCoupons.forEach(function(coupon) {
-              // ... (existing row creation logic, ensure coupon properties are accessed safely) ...
-              if (!coupon || typeof coupon !== 'object') return;
+              if (!coupon || typeof coupon !== 'object') return; // 유효하지 않은 쿠폰 객체 건너뛰기 (forEach 내에서도 확인)
               var row = tableBody.insertRow();
               row.insertCell().textContent = coupon.barcode;
               row.insertCell().textContent = formatDate(new Date(coupon.entryDate));
@@ -321,22 +386,23 @@
               expiryCell.textContent = formatDate(expiryDate);
 
               var today = new Date();
-              today.setHours(0,0,0,0);
+              today.setHours(0,0,0,0); // 오늘 날짜 정규화
 
+              // 만료 상태에 따라 스타일 적용
               if (expiryDate < today) {
                 row.classList.add('expired');
               } else if ((expiryDate - today) / (1000 * 60 * 60 * 24) <= 7) {
                 row.classList.add('nearing-expiry');
               }
 
-              row.insertCell().textContent = coupon.isGiftCertificate ? 'Gift Certificate' : 'Regular';
+              row.insertCell().textContent = coupon.isGiftCertificate ? '금액권' : '일반 쿠폰';
               row.insertCell().textContent = coupon.isGiftCertificate && coupon.originalAmount !== null ? parseFloat(coupon.originalAmount).toFixed(2) : 'N/A';
               row.insertCell().textContent = coupon.isGiftCertificate && coupon.balance !== null ? parseFloat(coupon.balance).toFixed(2) : 'N/A';
 
               var actionsCell = row.insertCell();
-              if (coupon.isGiftCertificate) {
+              if (coupon.isGiftCertificate) { // 금액권인 경우에만 '사용 기록' 버튼 추가
                 var useButton = document.createElement('button');
-                useButton.textContent = 'Log Usage';
+                useButton.textContent = '사용 기록';
                 useButton.onclick = function() { openUsageModal(coupon.barcode, coupon.balance); };
                 actionsCell.appendChild(useButton);
               }
@@ -344,45 +410,51 @@
           } else {
             var row = tableBody.insertRow();
             var cell = row.insertCell();
-            cell.colSpan = 7;
-            cell.textContent = "No coupons found or matching filters.";
+            cell.colSpan = 7; // 테이블의 전체 열 개수
+            cell.textContent = "쿠폰이 없거나 필터 조건에 맞는 쿠폰이 없습니다.";
             cell.style.textAlign = "center";
           }
         } catch (e) {
-          console.error("loadAllCoupons JSON.parse error:", e, "Original response:", jsonStringResponse);
+          console.error("loadAllCoupons JSON.parse 오류:", e, "Original response:", jsonStringResponse);
           var row = tableBody.insertRow();
           var cell = row.insertCell();
-          cell.colSpan = 7;
-          cell.textContent = "Error processing coupon list.";
+          cell.colSpan = 7; // 테이블의 전체 열 개수
+          cell.textContent = "쿠폰 목록 처리 중 오류가 발생했습니다.";
           cell.style.textAlign = "center";
-          showMessage("Error parsing coupon list: " + e.message, false);
+          showMessage("쿠폰 목록 파싱 중 오류: " + e.message, false);
         }
       })
       .withFailureHandler(function(error) {
         showLoading(false);
-        showMessage("Error loading all coupons: " + error.message, false);
+        showMessage("전체 쿠폰 로딩 중 오류: " + error.message, false);
       })
-      .getCoupons(); // We get all and filter client-side for now
+      .getCoupons(); // 현재는 모든 데이터를 가져와 클라이언트 측에서 필터링합니다.
   }
 
+  // 금액권 사용 기록 모달을 여는 함수
+  // @param {string} barcode - 사용할 금액권의 바코드
+  // @param {number} currentBalance - 현재 잔액
   function openUsageModal(barcode, currentBalance) {
     document.getElementById('usageBarcode').value = barcode;
     document.getElementById('amountUsed').value = '';
-    document.getElementById('amountUsed').max = currentBalance; // Set max based on balance
+    document.getElementById('amountUsed').max = currentBalance; // 잔액 기준으로 최대 사용 가능 금액 설정
     document.getElementById('usageModal').style.display = 'block';
   }
 
+  // 금액권 사용 기록 모달을 닫는 함수
   function closeUsageModal() {
     document.getElementById('usageModal').style.display = 'none';
   }
 
+  // 금액권 사용 양식 데이터를 서버로 전송하는 함수
   function submitUsageForm() {
     showLoading(true);
     var barcode = document.getElementById('usageBarcode').value;
     var amountUsed = parseFloat(document.getElementById('amountUsed').value);
 
+    // 사용 금액 유효성 검사
     if (isNaN(amountUsed) || amountUsed <= 0) {
-        showMessage("Please enter a valid positive amount to use.", false);
+        showMessage("올바른 사용 금액(0보다 큰 값)을 입력해주세요.", false);
         showLoading(false);
         return;
     }
@@ -392,99 +464,55 @@
         showLoading(false);
         try {
           if (typeof jsonStringResponse !== 'string') {
-            console.error("submitUsageForm Error: Expected a JSON string, received:", jsonStringResponse);
-            showMessage("Error: Invalid response from server.", false);
+            console.error("submitUsageForm 오류: JSON 문자열이 필요하지만 다음을 받음:", jsonStringResponse);
+            showMessage("오류: 서버로부터 잘못된 응답입니다.", false);
             return;
           }
-          var response = JSON.parse(jsonStringResponse); // Parse the JSON string
+          var response = JSON.parse(jsonStringResponse); // JSON 문자열 파싱
 
-          if (response.success) {
+          if (response.success) { // 성공 시
             showMessage(response.message, true);
             closeUsageModal();
-            loadAllCoupons();
-            loadLatestCoupons();
-          } else {
+            loadAllCoupons(); // 잔액 변경을 반영하기 위해 목록 새로고침
+            loadLatestCoupons(); // 최신 목록도 새로고침
+          } else { // 실패 시
             showMessage(response.message, false);
           }
         } catch (e) {
-          console.error("submitUsageForm JSON.parse error:", e, "Original response:", jsonStringResponse);
-          showMessage("Error processing server response: " + e.message, false);
+          console.error("submitUsageForm JSON.parse 오류:", e, "Original response:", jsonStringResponse);
+          showMessage("서버 응답 처리 중 오류: " + e.message, false);
         }
       })
       .withFailureHandler(function(error) {
         showLoading(false);
-        showMessage("Client-side error logging usage: " + error.message, false);
+        showMessage("사용내역 기록 중 클라이언트 오류: " + error.message, false);
       })
       .logGiftCertificateUsage(barcode, amountUsed);
   }
 
-  // Initial load
+  // 페이지 로드 시 실행되는 초기화 함수
   window.onload = function() {
-    // Use text input for date initially to allow placeholder, then change to date type on focus
-    document.getElementById('expiryDate').placeholder = 'yyyy-mm-dd';
-    document.getElementById('filterStartDate').placeholder = 'yyyy-mm-dd';
-    document.getElementById('filterEndDate').placeholder = 'yyyy-mm-dd';
+    // 날짜 입력 필드에 플레이스홀더 설정 (포커스 시 type='date'로 변경됨)
+    document.getElementById('expiryDate').placeholder = 'YYYY-MM-DD (만료일)';
+    document.getElementById('filterStartDate').placeholder = 'YYYY-MM-DD (조회 시작일)';
+    document.getElementById('filterEndDate').placeholder = 'YYYY-MM-DD (조회 종료일)';
 
+    // 조회 필터 날짜 기본값 설정
+    var today = new Date();
+
+    var startDateInput = document.getElementById('filterStartDate');
+    startDateInput.value = formatDate(today); // 시작일은 오늘
+
+    var endDateInput = document.getElementById('filterEndDate');
+    var oneYearFromToday = new Date(today);
+    oneYearFromToday.setFullYear(today.getFullYear() + 1); // 종료일은 오늘로부터 1년 뒤
+    endDateInput.value = formatDate(oneYearFromToday);
+
+    // 초기 데이터 로드
     loadLatestCoupons();
-    loadAllCoupons();
-    toggleBalanceInput(); // Ensure balance input is correctly hidden/shown initially
+    loadAllCoupons(); // 사용자가 변경하지 않았다면 이제 기본 날짜를 사용합니다.
+    toggleBalanceInput(); // 금액권 초기 금액 입력 필드 표시/숨김 상태 초기화
   };
 </script>
 </body>
 </html>
-// --- saveCouponForm success handler ---
-// (This was out of order in the prompt, placing it correctly)
-// Original:
-// google.script.run
-//   .withSuccessHandler(function(response) {
-//     showLoading(false);
-//     showMessage(response, response.startsWith("Error:") ? false : true);
-//     if (!response.startsWith("Error:")) {
-//       document.getElementById('barcode').value = '';
-//       // ...
-//     }
-//   })
-//   // ...
-//   .saveCoupon(couponData);
-
-// Corrected version of saveCouponForm's withSuccessHandler:
-// (This should replace the existing .withSuccessHandler in saveCouponForm function)
-// --- This is a conceptual placement, the actual change is within the saveCouponForm function structure provided in the prompt ---
-// The .withSuccessHandler for saveCouponForm should be:
-/*
-    google.script.run
-      .withSuccessHandler(function(jsonStringResponse) {
-        showLoading(false);
-        try {
-          if (typeof jsonStringResponse !== 'string') {
-            console.error("saveCouponForm Error: Expected a JSON string, received:", jsonStringResponse);
-            showMessage("Error: Invalid response from server.", false);
-            return;
-          }
-          var response = JSON.parse(jsonStringResponse); // Parse the JSON string
-
-          showMessage(response.message, response.success);
-          if (response.success) {
-            document.getElementById('barcode').value = '';
-            document.getElementById('expiryDate').value = '';
-            document.getElementById('isGiftCertificate').checked = false;
-            document.getElementById('initialBalance').value = '';
-            toggleBalanceInput();
-            loadLatestCoupons();
-            loadAllCoupons();
-          }
-        } catch (e) {
-          console.error("saveCouponForm JSON.parse error:", e, "Original response:", jsonStringResponse);
-          showMessage("Error processing server response: " + e.message, false);
-        }
-      })
-      .withFailureHandler(function(error) {
-        showLoading(false);
-        showMessage("Client-side error: " + error.message, false);
-      })
-      .saveCoupon(couponData);
-*/
-// The above comment block is for illustration. The actual change should be applied to the `saveCouponForm` function.
-// The diff tool requires the change to be in the main flow of the file.
-// The `saveCouponForm` was not provided in the `SEARCH` block, so I will apply the change to where it should be.
-// The following change is to the `saveCouponForm`'s success handler.
