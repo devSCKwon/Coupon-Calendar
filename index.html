@@ -4,509 +4,587 @@
   <base target="_top">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>쿠폰 관리 시스템</title>
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
+  <!-- Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
   <style>
-    /* Basic Reset */
-    * {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
-    }
     body {
         font-family: 'Roboto', 'Noto Sans KR', sans-serif;
         line-height: 1.6;
-        background-color: #f4f7f6;
-        color: #333;
-        padding: 15px;
+        background-color: #f8f9fa;
+        color: #212529;
     }
 
-    /* Typography */
     h1, h2, h3 {
         color: #2c3e50;
-        margin-bottom: 0.75em;
+        font-weight: 700;
     }
-    h1 { font-size: 2em; text-align: center; margin-bottom: 1em; font-weight: 700;}
-    h2 { font-size: 1.5em; border-bottom: 2px solid #e0e0e0; padding-bottom: 0.3em; font-weight: 700;}
-    h3 { font-size: 1.2em; font-weight: 700;}
+    h2 {
+        font-size: 1.75rem;
+        border-bottom: 2px solid #dee2e6;
+        padding-bottom: 0.5em;
+        margin-bottom: 1em;
+        margin-top: 0.5em;
+    }
+    #dashboardSection + #navigationSection h2,
+    #contentSections > .tab-pane > h2 {
+        margin-top: 0;
+    }
 
-    /* Layout Containers */
-    .container {
+
+    .custom-section-container {
         background-color: #fff;
         padding: 20px;
         margin-bottom: 25px;
-        border-radius: 8px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        border-radius: 0.375rem;
+        box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,.075);
     }
 
-    /* Buttons */
-    button, input[type="button"] {
-        background-color: #3498db;
-        color: white;
-        border: none;
-        padding: 12px 20px;
-        border-radius: 5px;
-        cursor: pointer;
-        font-size: 1em;
-        font-weight: 700;
-        transition: background-color 0.2s ease;
-        margin-top: 5px;
-        margin-right: 5px;
-    }
-    button:hover {
-        background-color: #2980b9;
-    }
-    button.secondary {
-        background-color: #7f8c8d;
-    }
-    button.secondary:hover {
-        background-color: #606c6d;
-    }
-
-    /* Input Fields & Labels */
-    input[type="text"], input[type="date"], input[type="number"], select, input[type="file"] {
-        width: 100%;
-        padding: 12px;
-        margin-bottom: 10px;
-        border: 1px solid #ccc;
-        border-radius: 5px;
-        font-size: 1em;
-        font-family: 'Roboto', 'Noto Sans KR', sans-serif;
-    }
-    input[type="checkbox"] {
-        margin-right: 8px;
-        vertical-align: middle;
-    }
-    label {
-        display: block;
-        margin-bottom: 8px;
-        font-weight: bold;
-        color: #555;
-    }
-    label.inline-label {
-        display: inline-block;
-        font-weight: normal;
-        margin-left: 5px;
-        margin-bottom: 0;
-    }
-
-
-    /* Tables */
-    .table-responsive-wrapper {
-        overflow-x: auto;
-        width: 100%;
-        border: 1px solid #ddd;
-        border-radius: 5px;
-        margin-top: 15px;
-    }
-    #allCouponsTable {
-        width: 100%;
-        min-width: 800px;
-        border-collapse: collapse;
-    }
-    #allCouponsTable th, #allCouponsTable td {
-        padding: 12px 15px;
-        text-align: left;
-        border-bottom: 1px solid #eee;
-    }
     #allCouponsTable th {
-        background-color: #ecf0f1;
-        color: #34495e;
-        font-weight: bold;
         white-space: nowrap;
-    }
-    #allCouponsTable tr:hover {
-        background-color: #f1f1f1;
+        background-color: #f8f9fa;
     }
     .coupon-fully-used {
         text-decoration: line-through;
-        color: #95a5a6;
-        background-color: #f8f9f9 !important;
+        color: #6c757d !important;
+        background-color: #e9ecef !important;
     }
-     .coupon-fully-used button {
+     .coupon-fully-used .btn {
        pointer-events: none;
-       opacity: 0.5;
+       opacity: 0.65;
     }
-    .expired { background-color: #ffdddd; color: #a00000; }
-    .nearing-expiry { background-color: #fff0dd; color: #c57500; }
+    .expired td {
+        background-color: #f8d7da !important;
+        color: #58151c !important;
+    }
+    .nearing-expiry td {
+        background-color: #fff3cd !important;
+        color: #664d03 !important;
+    }
 
-    /* Modals */
     .modal-base {
         display: none;
         position: fixed;
-        z-index: 1000;
+        z-index: 1055;
         left: 0;
         top: 0;
         width: 100%;
         height: 100%;
-        overflow: auto;
-        background-color: rgba(0,0,0,0.4);
+        overflow-x: hidden;
+        overflow-y: auto;
+        background-color: rgba(0,0,0,0.5);
     }
     .modal-content-base {
         background-color: #fff;
-        margin: 10% auto;
-        padding: 25px;
-        border: 1px solid #888;
-        width: 80%;
+        margin: 1.75rem auto;
+        padding: 0;
+        border: 1px solid rgba(0,0,0,.2);
+        border-radius: 0.5rem;
+        width: auto;
         max-width: 550px;
-        border-radius: 8px;
-        box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        box-shadow: 0 0.5rem 1rem rgba(0,0,0,.15);
         position: relative;
+        display: flex;
+        flex-direction: column;
     }
-    .modal-content-base h3, .modal-content-base h2 {
-        margin-top: 0;
-        border-bottom: 1px solid #eee;
-        padding-bottom: 0.5em;
+    .custom-modal-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        padding: 1rem 1rem;
+        border-bottom: 1px solid #dee2e6;
+        border-top-left-radius: calc(0.5rem - 1px);
+        border-top-right-radius: calc(0.5rem - 1px);
     }
-     .modal-content-base .usage-form label, .modal-content-base p {
-        margin-top: 15px;
-        margin-bottom: 5px;
+    .custom-modal-title {
+        margin-bottom: 0;
+        line-height: 1.5;
+        font-size: 1.25rem;
+        font-weight: 500;
     }
-    .modal-content-base .usage-form input[type="number"] {
-        margin-bottom: 15px;
+    .custom-modal-body {
+        position: relative;
+        flex: 1 1 auto;
+        padding: 1rem;
     }
-    .close-button {
-         color: #aaa;
-         float: right;
-         font-size: 28px;
-         font-weight: bold;
+    .custom-modal-footer {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: flex-end;
+        padding: 0.75rem;
+        border-top: 1px solid #dee2e6;
+        border-bottom-right-radius: calc(0.5rem - 1px);
+        border-bottom-left-radius: calc(0.5rem - 1px);
+    }
+    .custom-modal-footer > .btn {
+        margin-left: 0.25rem;
+    }
+    .custom-close-button {
+         box-sizing: content-box;
+         width: 1em;
+         height: 1em;
+         padding: .25em .25em;
+         color: #000;
+         background: transparent url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23000'%3e%3cpath d='M.293.293a1 1 0 011.414 0L8 6.586 14.293.293a1 1 0 111.414 1.414L9.414 8l6.293 6.293a1 1 0 01-1.414 1.414L8 9.414l-6.293 6.293a1 1 0 01-1.414-1.414L6.586 8 .293 1.707a1 1 0 010-1.414z'/%3e%3c/svg%3e") center/1em auto no-repeat;
+         border: 0;
+         border-radius: .25rem;
+         opacity: .5;
          cursor: pointer;
-         line-height: 1;
+         font-size: 1.5rem;
      }
-     .close-button:hover,
-     .close-button:focus {
-         color: black;
-         text-decoration: none;
+     .custom-close-button:hover {
+         opacity: .75;
      }
 
-    /* Messages */
-    .message {
-        padding: 15px;
-        margin-top: 0;
-        margin-bottom: 20px;
-        border-radius: 5px;
-        font-size: 0.95em;
-    }
-    .success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-    .error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
     #loading {
         display: none;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
         text-align: center;
-        padding: 30px;
-        font-size: 1.2em;
-        color: #3498db;
+        padding: 2rem;
+        font-size: 1rem;
+        color: #fff;
+        position: fixed;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background-color: rgba(0,0,0,0.65);
+        z-index:1100;
     }
 
-    /* Latest Coupons List specific styling */
-    #latestCouponsList ul {
-        list-style-type: none;
-        padding-left: 0;
-    }
-    #latestCouponsList li {
-        padding: 8px 0;
-        border-bottom: 1px dotted #eee;
-    }
-    #latestCouponsList li:last-child {
-        border-bottom: none;
-    }
-
-    /* Floating Action Button (FAB) */
     .fab {
        position: fixed;
        bottom: 30px;
        right: 30px;
-       width: 60px;
-       height: 60px;
-       background-color: #e91e63;
+       width: 56px;
+       height: 56px;
+       background-color: #0d6efd;
        color: white;
        border: none;
        border-radius: 50%;
-       font-size: 28px;
-       line-height: 60px;
-       text-align: center;
-       box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+       font-size: 24px;
+       display: flex;
+       align-items: center;
+       justify-content: center;
+       box-shadow: 0 4px 8px rgba(0,0,0,0.2), 0 0 0 2px rgba(255,255,255,0.1) inset;
        cursor: pointer;
-       z-index: 999;
+       z-index: 1040;
        transition: background-color 0.2s ease, transform 0.2s ease;
    }
    .fab:hover {
-       background-color: #c2185b;
+       background-color: #0b5ed7;
        transform: scale(1.05);
    }
+   .fab i {
+        /* Icon centered by flex on parent */
+   }
 
-   /* New Coupon Modal specific content styling */
+   /* Custom styles for dashboard cards */
+   #dashboardSection .card {
+       transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+       border: none;
+   }
+   #dashboardSection .card:hover {
+       transform: translateY(-5px);
+       box-shadow: 0 8px 15px rgba(0,0,0,0.1) !important;
+   }
+   /* #dashboardSection .card-body i { mb-2 on <i> already provides margin } */
+
    #newCouponModalBody h4 {
-       font-size: 1.1em;
-       color: #333;
-       margin-top: 20px;
-       margin-bottom: 10px;
-       border-bottom: 1px solid #eee;
-       padding-bottom: 5px;
+       font-size: 1.15rem;
+       color: #495057;
+       margin-top: 1rem;
+       margin-bottom: 0.75rem;
+       border-bottom: 1px solid #dee2e6;
+       padding-bottom: 0.5rem;
    }
    #newCouponModalBody h4:first-child {
        margin-top: 0;
    }
    .image-upload-area {
-       padding: 15px;
-       border: 2px dashed #ccc;
-       border-radius: 5px;
+       padding: 1rem;
+       border: 2px dashed #adb5bd;
+       border-radius: 0.25rem;
        text-align: center;
-       background-color: #f9f9f9;
-       margin-bottom: 20px;
+       background-color: #f8f9fa;
+       margin-bottom: 1rem;
    }
    .drag-drop-zone {
-       padding: 20px;
-       margin-bottom: 15px;
+       padding: 1rem;
+       margin-bottom: 0.75rem;
    }
    .drag-drop-zone p {
        margin: 0;
-       color: #777;
+       font-size: 0.9em;
+       color: #6c757d;
    }
    .drag-drop-zone.dragover {
-        border-color: #3498db;
-        background-color: #eaf5fb;
-   }
-   .image-upload-buttons label.button-like-label {
-       background-color: #5cb85c;
-       color: white;
-       padding: 10px 15px;
-       border-radius: 4px;
-       cursor: pointer;
-       display: inline-block;
-       margin: 5px;
-       font-size: 0.9em;
-       font-weight: normal;
-       transition: background-color 0.2s ease;
-   }
-   .image-upload-buttons label.button-like-label:hover {
-       background-color: #4cae4c;
+        border-color: #0d6efd;
+        background-color: #e9ecef;
    }
    #newCouponImagePreview {
-       margin-top: 15px;
+       margin-top: 1rem;
        max-width: 100%;
-       max-height: 250px;
-       border: 1px solid #ddd;
-       padding: 5px;
-       border-radius: 4px;
-   }
-   .form-fields div {
-       margin-bottom: 10px;
-   }
-   #newCouponIsGift + label.inline-label {
-       font-weight: normal;
-       cursor: pointer;
-       margin-left: 5px;
+       max-height: 180px;
+       border: 1px solid #dee2e6;
+       padding: 0.25rem;
+       border-radius: 0.25rem;
    }
    .required-star {
-       color: #e74c3c;
-       margin-left: 3px;
+       color: #dc3545;
+       margin-left: 0.125rem;
    }
    #newCouponModal .modal-content-base .modal-actions {
         text-align: right;
-        margin-top: 25px;
-        border-top: 1px solid #eee;
-        padding-top: 15px;
+        margin-top: 1.5rem;
+        border-top: 1px solid #dee2e6;
+        padding-top: 1rem;
    }
 
+    #mainNavigation {
+        margin-bottom: 1.5rem;
+    }
+    #mainNavigation .nav-link {
+        color: #0d6efd;
+        font-weight: 500;
+        border-bottom: 3px solid transparent;
+        border-radius: 0;
+        padding-top: 0.75rem; padding-bottom: 0.75rem;
+    }
+    #mainNavigation .nav-link.active {
+        color: #0a58ca;
+        background-color: transparent !important;
+        border-bottom-color: #0a58ca;
+    }
+    #mainNavigation .nav-link:not(.active):hover {
+        color: #0b5ed7;
+        border-bottom-color: #cfe2ff;
+    }
 
     /* Responsive Adjustments */
     @media (max-width: 768px) { /* Tablet */
-        .container {
+        .custom-section-container {
             padding: 15px;
             margin-bottom: 20px;
         }
-        h1 { font-size: 1.8em; }
-        h2 { font-size: 1.4em; }
+        h1.text-center { font-size: 1.75rem; }
+        h2 { font-size: 1.5rem; }
         #allCouponsTable {
            min-width: 600px;
         }
-         th, td { padding: 10px; }
+         #allCouponsTable th, #allCouponsTable td { padding: 0.6rem 0.5rem; }
+         #dashboardSection .card-title { font-size: 1rem; }
+         #dashboardSection .card-text { font-size: 1.75rem; }
+         #dashboardSection .card-body i { font-size: 2rem !important; }
     }
 
     @media (max-width: 480px) { /* Mobile */
         body {
             padding: 10px;
-            font-size: 15px;
+            font-size: 0.9rem;
         }
-        .container {
-            padding: 12px;
+        .container-fluid {
+            padding-left: 5px;
+            padding-right: 5px;
+        }
+        .custom-section-container {
+            padding: 10px;
             margin-bottom: 15px;
         }
-        h1 { font-size: 1.6em; }
-        h2 { font-size: 1.25em; }
-        h3 { font-size: 1.1em; }
-
-        input[type="text"], input[type="date"], input[type="number"], select, input[type="file"], button {
-            padding: 14px;
-            font-size: 1em;
+        #navigationSection.custom-section-container {
+            padding-top: 10px; /* Reduce top/bottom padding for nav container */
+            padding-bottom: 0;
         }
-        label { font-size: 1em; }
+        h1.text-center { font-size: 1.5rem; }
+        h2 { font-size: 1.25rem; }
 
         .modal-content-base {
-            width: 95%;
-            margin: 15% auto;
-            padding: 20px;
+            width: 98%;
+            margin: 5% auto;
+            padding: 0;
         }
-        #newCouponModalBody h4 { font-size: 1.05em; }
+        .custom-modal-header, .custom-modal-body, .custom-modal-footer {
+            padding: 0.75rem;
+        }
+        .custom-modal-title { font-size: 1.1rem; }
+        #newCouponModalBody h4 { font-size: 1rem; margin-top: 0.75rem;}
 
         #allCouponsTable {
-           min-width: 700px;
+           min-width: auto;
         }
-        th, td { padding: 8px; font-size: 0.9em; }
+        #allCouponsTable th, #allCouponsTable td { padding: 0.4rem; font-size: 0.8rem; }
+
         .fab {
-            bottom: 20px;
-            right: 20px;
-            width: 50px;
-            height: 50px;
-            font-size: 24px;
-            line-height: 50px;
+            bottom: 15px;
+            right: 15px;
+            width: 48px;
+            height: 48px;
+            font-size: 20px;
         }
+        #mainNavigation .nav-link {
+            font-size: 0.8rem;
+            padding: 0.5rem 0.2rem;
+        }
+        #mainNavigation .nav-link i {
+            margin-right: 0.1rem;
+            font-size: 0.85rem;
+        }
+        .btn {
+            font-size: 0.85rem;
+            padding: 0.3rem 0.6rem;
+        }
+        .form-control, .form-select, .form-control-sm {
+            font-size: 0.9rem;
+            padding: 0.3rem 0.6rem;
+        }
+        .form-label { font-size: 0.9rem; }
+        #dashboardSection .card-body { padding: 0.5rem; }
+        #dashboardSection .card-title { font-size: 0.85rem; margin-top: 0.15rem !important;}
+        #dashboardSection .card-text { font-size: 1.3rem; }
+        #dashboardSection .card-body i { font-size: 1.5rem !important; margin-bottom: 0.15rem !important;}
+        .filters .btn { width: 100%; } /* Make filter button full width on mobile */
     }
   </style>
 </head>
 <body>
-  <h1>쿠폰 관리 시스템</h1>
+  <div class="container-fluid pt-3">
+    <h1 class="mb-4 text-center">쿠폰 관리 시스템</h1>
 
-  <div id="loading">로딩 중...</div>
-  <div id="statusMessage" class="message" style="display:none;"></div>
-
-  <!-- 최신 5개 쿠폰 목록 -->
-  <div class="container">
-    <h2>최신 쿠폰</h2>
-    <div id="latestCouponsList">
-      <!-- 최신 쿠폰이 여기에 로드됩니다 -->
+    <div id="dashboardSection" class="row text-center mb-4">
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card shadow-sm h-100">
+                <div class="card-body d-flex flex-column justify-content-center align-items-center">
+                    <i class="bi bi-collection fs-1 text-primary mb-2"></i>
+                    <h5 class="card-title mt-2">총 보유쿠폰</h5>
+                    <p class="card-text fs-4 fw-bold" id="totalCouponsStat">-- 개</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card shadow-sm h-100">
+                <div class="card-body d-flex flex-column justify-content-center align-items-center">
+                    <i class="bi bi-check-circle fs-1 text-success mb-2"></i>
+                    <h5 class="card-title mt-2">사용 가능</h5>
+                    <p class="card-text fs-4 fw-bold" id="availableCouponsStat">-- 개</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card shadow-sm h-100">
+                <div class="card-body d-flex flex-column justify-content-center align-items-center">
+                    <i class="bi bi-hourglass-split fs-1 text-warning mb-2"></i>
+                    <h5 class="card-title mt-2">만료 예정</h5>
+                    <p class="card-text fs-4 fw-bold" id="expiringSoonStat">-- 개</p>
+                    <!-- "만료 예정" 기준은 추후 정의 필요 (예: 7일 이내) -->
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card shadow-sm h-100">
+                <div class="card-body d-flex flex-column justify-content-center align-items-center">
+                    <i class="bi bi-wallet2 fs-1 text-info mb-2"></i>
+                    <h5 class="card-title mt-2">총 잔액 (금액권)</h5>
+                    <p class="card-text fs-4 fw-bold" id="totalBalanceStat">₩ --</p>
+                </div>
+            </div>
+        </div>
     </div>
-    <button onclick="loadLatestCoupons()">최신 목록 새로고침</button>
+
+    <div id="navigationSection" class="custom-section-container pt-2 pb-0">
+        <ul class="nav nav-pills nav-fill" id="mainNavigation" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="navCouponList-tab" data-bs-target="#couponListSection" type="button" role="tab" aria-controls="couponListSection" aria-selected="true">
+                    <i class="bi bi-list-ul me-1"></i>쿠폰 목록
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="navCouponRegistration-tab" data-bs-target="#couponRegistrationSection" type="button" role="tab" aria-controls="couponRegistrationSection" aria-selected="false">
+                    <i class="bi bi-info-circle me-1"></i>등록 안내
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="navUsageHistory-tab" data-bs-target="#usageHistorySection" type="button" role="tab" aria-controls="usageHistorySection" aria-selected="false">
+                    <i class="bi bi-clock-history me-1"></i>사용 히스토리
+                </button>
+            </li>
+        </ul>
+    </div>
+
+    <div id="contentSections">
+        <div class="tab-content" id="mainTabContent">
+            <div class="tab-pane fade show active custom-section-container" id="couponListSection" role="tabpanel" aria-labelledby="navCouponList-tab">
+                <h2>전체 쿠폰</h2>
+                <div class="filters row g-3 align-items-center mb-3">
+                  <div class="col-md">
+                    <label for="filterStartDate" class="form-label">조회 시작일:</label>
+                    <input type="text" id="filterStartDate" class="form-control form-control-sm" onfocus="(this.type='date')">
+                  </div>
+                  <div class="col-md">
+                    <label for="filterEndDate" class="form-label">조회 종료일:</label>
+                    <input type="text" id="filterEndDate" class="form-control form-control-sm" onfocus="(this.type='date')">
+                  </div>
+                  <div class="col-md-auto align-self-end">
+                    <button onclick="loadAllCoupons()" class="btn btn-sm btn-primary w-100 mt-3 mt-md-0">필터 적용</button>
+                  </div>
+                </div>
+                <div class="table-responsive">
+                  <table id="allCouponsTable" class="table table-striped table-hover table-sm caption-top">
+                    <caption>쿠폰 목록</caption>
+                    <thead class="table-light">
+                      <tr>
+                        <th>바코드</th>
+                        <th>입력일</th>
+                        <th>만료일</th>
+                        <th>유형</th>
+                        <th>최초 금액</th>
+                        <th>잔액</th>
+                        <th>이미지 링크</th>
+                        <th>사용 완료</th>
+                        <th>만료 상태</th>
+                        <th>작업</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <!-- 모든 쿠폰이 여기에 로드됩니다 -->
+                    </tbody>
+                  </table>
+                </div>
+            </div>
+            <div class="tab-pane fade custom-section-container" id="couponRegistrationSection" role="tabpanel" aria-labelledby="navCouponRegistration-tab">
+                <div class="text-center p-md-4">
+                    <h2 class="mb-3"><i class="bi bi-info-circle-fill text-primary me-2"></i>쿠폰 등록 안내</h2>
+                    <p class="lead mb-4">새 쿠폰을 등록하려면 화면 우측 하단의 <button type="button" class="btn btn-danger rounded-circle fab-inline-mention" onclick="document.getElementById('addCouponFab').click();" title="새 쿠폰 추가"><i class="bi bi-plus-lg"></i></button> 버튼을 이용해주세요.</p>
+                    <style>.fab-inline-mention { width: 40px; height: 40px; font-size: 16px; line-height: 1; padding: 0; vertical-align: text-bottom;} </style>
+                </div>
+            </div>
+            <div class="tab-pane fade custom-section-container" id="usageHistorySection" role="tabpanel" aria-labelledby="navUsageHistory-tab">
+                <div class="text-center p-md-4">
+                    <h2 class="mb-3"><i class="bi bi-tools text-secondary me-2"></i>사용 히스토리</h2>
+                    <p class="lead">이 기능은 현재 준비 중입니다.</p>
+                </div>
+            </div>
+        </div>
+    </div>
   </div>
 
-  <!-- 전체 쿠폰 목록 -->
-  <div class="container">
-    <h2>전체 쿠폰</h2>
-    <div class="filters">
-      <label for="filterStartDate">조회 시작일 (입력일 기준):</label>
-      <input type="text" id="filterStartDate" onfocus="(this.type='date')">
-      <label for="filterEndDate">조회 종료일 (입력일 기준):</label>
-      <input type="text" id="filterEndDate" onfocus="(this.type='date')">
-      <button onclick="loadAllCoupons()">필터 적용 / 목록 새로고침</button>
-    </div>
-    <div class="table-responsive-wrapper">
-      <table id="allCouponsTable">
-        <thead>
-          <tr>
-            <th>바코드</th>
-            <th>입력일</th>
-            <th>만료일</th>
-            <th>유형</th>
-            <th>최초 금액</th>
-            <th>잔액</th>
-            <th>이미지 링크</th>
-            <th>사용 완료</th>
-            <th>만료 상태</th>
-            <th>작업</th>
-          </tr>
-        </thead>
-        <tbody>
-          <!-- 모든 쿠폰이 여기에 로드됩니다 -->
-        </tbody>
-      </table>
+  <div id="statusMessage" role="alert" style="display:none; z-index: 1070;"></div>
+  <div id="loading" style="display:none;"></div>
+
+  <button id="addCouponFab" class="fab" title="새 쿠폰 추가"><i class="bi bi-plus-lg"></i></button>
+
+  <div id="newCouponModal" class="modal-base">
+    <div class="modal-content-base">
+        <div class="custom-modal-header">
+            <h2 class="custom-modal-title">새 쿠폰 등록</h2>
+            <button type="button" class="custom-close-button" onclick="closeNewCouponModal()" aria-label="Close">&times;</button>
+        </div>
+        <div class="custom-modal-body" id="newCouponModalBody">
+            <h4>1. 쿠폰 이미지 등록 (선택 사항)</h4>
+            <div class="image-upload-area">
+                <div id="dragDropZone" class="drag-drop-zone">
+                    <p><i class="bi bi-cloud-arrow-up-fill fs-3 text-muted"></i><br>여기에 이미지를 드래그 앤 드롭하거나<br>아래 버튼을 사용하세요.</p>
+                </div>
+                <div class="image-upload-buttons">
+                    <label for="newCouponImageFile" class="btn btn-success btn-sm"><i class="bi bi-file-earmark-arrow-up"></i> 파일 선택</label>
+                    <input type="file" id="newCouponImageFile" accept="image/*" style="display: none;">
+                    <label for="newCouponCameraFile" class="btn btn-info btn-sm"><i class="bi bi-camera"></i> 사진 촬영</label>
+                    <input type="file" id="newCouponCameraFile" accept="image/*" capture="environment" style="display: none;">
+                </div>
+                <img id="newCouponImagePreview" src="#" alt="이미지 미리보기" style="display: none;">
+            </div>
+            <hr>
+            <h4>2. 쿠폰 정보 입력</h4>
+            <div class="form-fields">
+                <div class="mb-3">
+                    <label for="newCouponBarcode" class="form-label">바코드 번호 <span class="required-star">*</span></label>
+                    <input type="text" id="newCouponBarcode" class="form-control" placeholder="바코드 스캔 또는 직접 입력">
+                </div>
+                <div class="form-check mb-3">
+                    <input type="checkbox" class="form-check-input" id="newCouponIsGift" onchange="toggleNewCouponBalanceField()">
+                    <label for="newCouponIsGift" class="form-check-label">금액권 (상품권)</label>
+                </div>
+                <div id="newCouponBalanceGroup" style="display:none;" class="mb-3">
+                    <label for="newCouponInitialBalance" class="form-label">초기 금액 <span class="required-star">*</span></label>
+                    <input type="number" id="newCouponInitialBalance" class="form-control" placeholder="금액권인 경우 초기 금액 입력">
+                </div>
+                <div class="mb-3">
+                    <label for="newCouponExpiryDate" class="form-label">만료 일자 <span class="required-star">*</span></label>
+                    <input type="text" id="newCouponExpiryDate" class="form-control" placeholder="YYYY-MM-DD" onfocus="(this.type='date')" onblur="if(!this.value)this.type='text'">
+                </div>
+            </div>
+        </div>
+        <div class="custom-modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeNewCouponModal()">취소</button>
+            <button type="button" id="saveNewCouponButton" class="btn btn-primary">저장</button>
+        </div>
     </div>
   </div>
 
-  <!-- 금액권 사용 기록 모달 -->
   <div id="usageModal" class="modal-base">
     <div class="modal-content-base">
-      <span class="close-button" onclick="closeUsageModal()">&times;</span>
-      <h3>금액권 사용 기록</h3>
-      <div class="usage-form">
-        <input type="hidden" id="usageBarcode">
-        <label for="amountUsed">사용할 금액:</label>
-        <input type="number" id="amountUsed" name="amountUsed" min="0.01" step="0.01" required>
-        <button onclick="submitUsageForm()">사용 기록</button>
-        <button onclick="closeUsageModal()" class="secondary">취소</button>
+      <div class="custom-modal-header">
+        <h3 class="custom-modal-title">금액권 사용 기록</h3>
+        <button type="button" class="custom-close-button" onclick="closeUsageModal()" aria-label="Close">&times;</button>
+      </div>
+      <div class="custom-modal-body">
+        <div class="usage-form">
+          <input type="hidden" id="usageBarcode">
+          <div class="mb-3">
+            <label for="amountUsed" class="form-label">사용할 금액:</label>
+            <input type="number" id="amountUsed" class="form-control" name="amountUsed" min="0.01" step="0.01" required>
+          </div>
+        </div>
+      </div>
+      <div class="custom-modal-footer">
+          <button onclick="submitUsageForm()" class="btn btn-success">사용 기록</button>
+          <button onclick="closeUsageModal()" class="btn btn-secondary">취소</button>
       </div>
     </div>
   </div>
 
-  <!-- 일반 쿠폰 사용 처리 모달 -->
   <div id="generalCouponUsageModal" class="modal-base">
     <div class="modal-content-base">
-      <span class="close-button" onclick="closeGeneralCouponUsageModal()">&times;</span>
-      <h3>일반 쿠폰 사용 처리</h3>
-      <p id="generalCouponConfirmText"></p>
-      <input type="hidden" id="generalCouponBarcodeToMark">
-      <button onclick="submitMarkAsUsed()">사용 완료 처리</button>
-      <button onclick="closeGeneralCouponUsageModal()" class="secondary">취소</button>
+      <div class="custom-modal-header">
+        <h3 class="custom-modal-title">일반 쿠폰 사용 처리</h3>
+        <button type="button" class="custom-close-button" onclick="closeGeneralCouponUsageModal()" aria-label="Close">&times;</button>
+      </div>
+      <div class="custom-modal-body">
+        <p id="generalCouponConfirmText" class="my-3"></p>
+        <input type="hidden" id="generalCouponBarcodeToMark">
+      </div>
+      <div class="custom-modal-footer">
+          <button onclick="submitMarkAsUsed()" class="btn btn-warning">사용 완료 처리</button>
+          <button onclick="closeGeneralCouponUsageModal()" class="btn btn-secondary">취소</button>
+      </div>
     </div>
   </div>
-
-  <!-- 새 쿠폰 등록 모달 -->
-  <div id="newCouponModal" class="modal-base">
-    <div class="modal-content-base">
-        <span class="close-button" onclick="closeNewCouponModal()">&times;</span>
-        <h2>새 쿠폰 등록</h2>
-        <div id="newCouponModalBody">
-            <h4>1. 쿠폰 이미지 등록 (선택 사항)</h4>
-            <div class="image-upload-area">
-                <div id="dragDropZone" class="drag-drop-zone">
-                    <p>여기에 이미지를 드래그 앤 드롭하거나 아래 버튼을 사용하세요.</p>
-                </div>
-                <div class="image-upload-buttons">
-                    <label for="newCouponImageFile" class="button-like-label">파일 선택</label>
-                    <input type="file" id="newCouponImageFile" accept="image/*" style="display: none;">
-
-                    <label for="newCouponCameraFile" class="button-like-label">사진 촬영</label>
-                    <input type="file" id="newCouponCameraFile" accept="image/*" capture="environment" style="display: none;">
-                </div>
-                <img id="newCouponImagePreview" src="#" alt="이미지 미리보기" style="max-width: 100%; max-height: 200px; margin-top: 15px; display: none; border: 1px solid #ddd; padding: 5px;">
-            </div>
-
-            <hr style="margin: 20px 0;">
-
-            <h4>2. 쿠폰 정보 입력</h4>
-            <div class="form-fields">
-                <div>
-                    <label for="newCouponBarcode">바코드 번호 <span class="required-star">*</span></label>
-                    <input type="text" id="newCouponBarcode" placeholder="바코드 스캔 또는 직접 입력">
-                </div>
-
-                <div style="margin-top:15px;">
-                    <input type="checkbox" id="newCouponIsGift" onchange="toggleNewCouponBalanceField()">
-                    <label for="newCouponIsGift" class="inline-label">금액권 (상품권)</label>
-                </div>
-
-                <div id="newCouponBalanceGroup" style="display:none; margin-top:10px;">
-                    <label for="newCouponInitialBalance">초기 금액 <span class="required-star">*</span></label>
-                    <input type="number" id="newCouponInitialBalance" placeholder="금액권인 경우 초기 금액 입력">
-                </div>
-
-                <div style="margin-top:15px;">
-                    <label for="newCouponExpiryDate">만료 일자 <span class="required-star">*</span></label>
-                    <input type="text" id="newCouponExpiryDate" placeholder="YYYY-MM-DD" onfocus="(this.type='date')" onblur="if(!this.value)this.type='text'">
-                </div>
-            </div>
-        </div>
-        <div class="modal-actions">
-            <button type="button" class="secondary" onclick="closeNewCouponModal()">취소</button>
-            <button type="button" id="saveNewCouponButton">저장</button>
-        </div>
-    </div>
-  </div>
-
-  <button id="addCouponFab" class="fab" title="새 쿠폰 추가">+</button>
 
 <script>
   var newCouponModalElement;
-  var selectedImageFile = null; // 선택된 이미지 파일 객체를 저장할 변수
+  var selectedImageFile = null;
 
   function showLoading(isLoading) {
-    document.getElementById('loading').style.display = isLoading ? 'block' : 'none';
+    var loader = document.getElementById('loading');
+    if (isLoading) {
+        loader.innerHTML = '<div class="spinner-border text-light" style="width: 3rem; height: 3rem;" role="status"><span class="visually-hidden">로딩 중...</span></div><p class="mt-3 text-light fs-5">로딩 중...</p>';
+        loader.style.display = 'flex';
+    } else {
+        loader.style.display = 'none';
+    }
   }
 
   function showMessage(message, isSuccess) {
     var msgDiv = document.getElementById('statusMessage');
     msgDiv.textContent = message;
-    msgDiv.className = 'message ' + (isSuccess ? 'success' : 'error');
+    msgDiv.className = 'alert ' + (isSuccess ? 'alert-success' : 'alert-danger') + ' show fade';
     msgDiv.style.display = 'block';
-    setTimeout(() => { msgDiv.style.display = 'none'; }, 5000);
+    setTimeout(() => {
+        msgDiv.classList.remove('show');
+        setTimeout(() => { msgDiv.style.display = 'none'; msgDiv.className = 'alert';}, 150);
+    }, 5000);
   }
 
   function toggleNewCouponBalanceField() {
@@ -537,12 +615,11 @@
     return d.toISOString().split('T')[0];
   }
 
-  // 이미지 미리보기 및 파일 저장 함수
   function previewAndSetFile(file) {
+    var imagePreview = document.getElementById('newCouponImagePreview');
     if (file && file.type.startsWith('image/')) {
-      selectedImageFile = file; // 파일 객체 저장
+      selectedImageFile = file;
       var reader = new FileReader();
-      var imagePreview = document.getElementById('newCouponImagePreview');
       reader.onload = function(e) {
         imagePreview.src = e.target.result;
         imagePreview.style.display = 'block';
@@ -550,15 +627,14 @@
       reader.readAsDataURL(file);
     } else {
       selectedImageFile = null;
-      document.getElementById('newCouponImagePreview').src = '#';
-      document.getElementById('newCouponImagePreview').style.display = 'none';
-      if (file) { // 파일이 제공되었으나 이미지 타입이 아닌 경우
+      imagePreview.src = '#';
+      imagePreview.style.display = 'none';
+      if (file) {
          showMessage("이미지 파일만 선택 가능합니다. (image/*)", false);
       }
     }
   }
 
-  // 새 쿠폰 저장 로직 (submitNewCouponForm)
   function submitNewCouponForm() {
     showLoading(true);
     var barcode = document.getElementById('newCouponBarcode').value;
@@ -624,7 +700,6 @@
     }
   }
 
-  // 최종 쿠폰 데이터 저장 함수 (기존 saveCouponDataToSheet 역할)
   function saveFinalCouponData(dataToSave) {
     if(!document.getElementById('loading').style.display || document.getElementById('loading').style.display === 'none') {
         showLoading(true);
@@ -640,9 +715,8 @@
                 var saveResponse = JSON.parse(saveResponseString);
                 showMessage(saveResponse.message, saveResponse.success);
                 if (saveResponse.success) {
-                    openNewCouponModal(); // 폼 초기화를 위해 호출 (내부에서 리셋)
-                    closeNewCouponModal(); // 그 후 바로 닫음
-                    loadLatestCoupons();
+                    openNewCouponModal();
+                    closeNewCouponModal();
                     loadAllCoupons();
                 }
             } catch (parseErr) {
@@ -656,68 +730,7 @@
         .saveCoupon(dataToSave);
   }
 
-
-  // --- 기존 함수들 (loadLatestCoupons, loadAllCoupons, etc.) ---
-  // (이전 단계에서 정의된 함수들은 여기에 그대로 존재하며, 필요시 약간의 수정이 가해짐)
-
-  function loadLatestCoupons() {
-    showLoading(true);
-    google.script.run
-      .withSuccessHandler(function(jsonStringResponse) {
-        showLoading(false);
-        var listDiv = document.getElementById('latestCouponsList');
-        listDiv.innerHTML = '';
-        try {
-          if (typeof jsonStringResponse !== 'string') {
-            console.error("loadLatestCoupons 오류: JSON 문자열이 필요하지만 다음을 받음:", jsonStringResponse);
-            listDiv.textContent = "오류: 서버로부터 잘못된 형식의 데이터가 수신되었습니다.";
-            return;
-          }
-          var coupons = JSON.parse(jsonStringResponse);
-
-          if (Array.isArray(coupons) && coupons.length > 0) {
-            var ul = document.createElement('ul');
-            coupons.forEach(function(coupon) {
-              var li = document.createElement('li');
-              var expiry = new Date(coupon.expiryDate);
-              var today = new Date();
-              today.setHours(0,0,0,0);
-
-              var text = coupon.barcode + " (만료일: " + formatDate(expiry) + ")";
-              if (coupon.isGiftCertificate) {
-                text += " - 잔액: " + (coupon.balance !== null ? parseFloat(coupon.balance).toFixed(2) : 'N/A');
-              }
-              if (coupon.imageWebViewLink) {
-                 text += ' (<a href="' + coupon.imageWebViewLink + '" target="_blank">이미지 보기</a>)';
-              }
-              li.innerHTML = text;
-
-              if (expiry < today && coupon.expiryStatus === '사용가능') {
-                li.classList.add('expired');
-              } else if (!li.classList.contains('expired') && (new Date(coupon.expiryDate) - today) / (1000 * 60 * 60 * 24) <= 7 && coupon.expiryStatus === '사용가능') {
-                li.classList.add('nearing-expiry');
-              }
-              if (coupon.expiryStatus === '사용완료' || coupon.expiryStatus === '잔액없음') {
-                li.classList.add('coupon-fully-used');
-              }
-              ul.appendChild(li);
-            });
-            listDiv.appendChild(ul);
-          } else {
-            listDiv.textContent = "최근 쿠폰이 없습니다.";
-          }
-        } catch (e) {
-          console.error("loadLatestCoupons JSON.parse 오류:", e, "Original response:", jsonStringResponse);
-          listDiv.textContent = "쿠폰 데이터 처리 중 오류가 발생했습니다.";
-          showMessage("최신 쿠폰 파싱 중 오류: " + e.message, false);
-        }
-      })
-      .withFailureHandler(function(error) {
-        showLoading(false);
-        showMessage("최신 쿠폰 로딩 중 오류: " + error.message, false);
-      })
-      .getLatestCoupons();
-  }
+  function loadLatestCoupons() { /* Commented out as section is removed */ }
 
   function loadAllCoupons() {
     showLoading(true);
@@ -810,12 +823,14 @@
               if (coupon.expiryStatus === '사용가능') {
                 if (coupon.isGiftCertificate) {
                   var useButton = document.createElement('button');
-                  useButton.textContent = '사용 기록';
+                  useButton.className = 'btn btn-sm btn-success';
+                  useButton.innerHTML = '<i class="bi bi-cash-coin"></i> 사용';
                   useButton.onclick = function() { openUsageModal(coupon.barcode, coupon.balance); };
                   actionsCell.appendChild(useButton);
                 } else {
                   var markUsedButton = document.createElement('button');
-                  markUsedButton.textContent = '사용 처리';
+                  markUsedButton.className = 'btn btn-sm btn-primary';
+                  markUsedButton.innerHTML = '<i class="bi bi-check-lg"></i> 사용 처리';
                   markUsedButton.onclick = function() { openMarkAsUsedModal(coupon.barcode); };
                   actionsCell.appendChild(markUsedButton);
                 }
@@ -878,7 +893,6 @@
           if (response.success) {
             closeGeneralCouponUsageModal();
             loadAllCoupons();
-            loadLatestCoupons();
           }
         } catch (e) {
           console.error("submitMarkAsUsed JSON.parse error:", e, "Original response:", responseString);
@@ -930,7 +944,6 @@
             showMessage(response.message, true);
             closeUsageModal();
             loadAllCoupons();
-            loadLatestCoupons();
           } else {
             showMessage(response.message, false);
           }
@@ -949,15 +962,16 @@
   function openNewCouponModal() {
     if (!newCouponModalElement) newCouponModalElement = document.getElementById('newCouponModal');
 
-    // Reset form fields
     document.getElementById('newCouponBarcode').value = '';
     document.getElementById('newCouponExpiryDate').value = '';
-    // Ensure date input type is reset to text to show placeholder
     document.getElementById('newCouponExpiryDate').type = 'text';
     document.getElementById('newCouponIsGift').checked = false;
     document.getElementById('newCouponInitialBalance').value = '';
-    document.getElementById('newCouponImageFile').value = '';
-    document.getElementById('newCouponCameraFile').value = '';
+
+    var imgFile = document.getElementById('newCouponImageFile');
+    if(imgFile) imgFile.value = '';
+    var camFile = document.getElementById('newCouponCameraFile');
+    if(camFile) camFile.value = '';
 
     var imagePreview = document.getElementById('newCouponImagePreview');
     imagePreview.src = '#';
@@ -973,6 +987,60 @@
     if (!newCouponModalElement) newCouponModalElement = document.getElementById('newCouponModal');
     newCouponModalElement.style.display = 'none';
   }
+
+  // Custom Tab Switching Logic
+  document.addEventListener('DOMContentLoaded', function () {
+      const mainNavigation = document.getElementById('mainNavigation');
+      const tabPanes = document.querySelectorAll('#mainTabContent .tab-pane');
+      const navLinks = document.querySelectorAll('#mainNavigation .nav-link');
+
+      if (mainNavigation) {
+          mainNavigation.addEventListener('click', function(event) {
+              let clickedTabButton = null;
+              if (event.target.classList.contains('nav-link')) {
+                  clickedTabButton = event.target;
+              } else if (event.target.closest('.nav-link')) {
+                  clickedTabButton = event.target.closest('.nav-link');
+              }
+
+              if (clickedTabButton && !clickedTabButton.classList.contains('active')) {
+                  navLinks.forEach(link => {
+                      link.classList.remove('active');
+                      link.setAttribute('aria-selected', 'false');
+                  });
+                  tabPanes.forEach(pane => {
+                      pane.classList.remove('show', 'active');
+                  });
+
+                  clickedTabButton.classList.add('active');
+                  clickedTabButton.setAttribute('aria-selected', 'true');
+                  const targetPaneId = clickedTabButton.getAttribute('data-bs-target');
+                  if (targetPaneId) {
+                      const targetPane = document.querySelector(targetPaneId);
+                      if (targetPane) {
+                          targetPane.classList.add('show', 'active');
+                      }
+                  }
+              }
+              if(event.target.tagName === 'BUTTON' || event.target.closest('.nav-link')) {
+                event.preventDefault();
+              }
+          });
+      }
+
+      const defaultActiveTab = document.querySelector('#mainNavigation .nav-link.active');
+      if (defaultActiveTab) {
+          const targetPaneId = defaultActiveTab.getAttribute('data-bs-target');
+          if (targetPaneId) {
+              const targetPane = document.querySelector(targetPaneId);
+              if (targetPane && !targetPane.classList.contains('show')) {
+                  tabPanes.forEach(pane => pane.classList.remove('show', 'active'));
+                  targetPane.classList.add('show', 'active');
+              }
+          }
+      }
+  });
+
 
   window.onload = function() {
     document.getElementById('filterStartDate').placeholder = 'YYYY-MM-DD (조회 시작일)';
@@ -994,35 +1062,40 @@
     document.getElementById('addCouponFab').addEventListener('click', openNewCouponModal);
     document.getElementById('saveNewCouponButton').onclick = submitNewCouponForm;
 
-    // Event Listeners for File Inputs in New Coupon Modal
-    document.getElementById('newCouponImageFile').addEventListener('change', function(event) {
-      previewAndSetFile(event.target.files[0]);
-    });
-    document.getElementById('newCouponCameraFile').addEventListener('change', function(event) {
-      previewAndSetFile(event.target.files[0]);
-    });
+    var newCouponImageFileInput = document.getElementById('newCouponImageFile');
+    if (newCouponImageFileInput) {
+        newCouponImageFileInput.addEventListener('change', function(event) {
+            previewAndSetFile(event.target.files[0]);
+        });
+    }
+    var newCouponCameraFileInput = document.getElementById('newCouponCameraFile');
+    if (newCouponCameraFileInput) {
+        newCouponCameraFileInput.addEventListener('change', function(event) {
+            previewAndSetFile(event.target.files[0]);
+        });
+    }
 
-    // Drag and Drop Logic for dragDropZone in New Coupon Modal
     var dragDropZone = document.getElementById('dragDropZone');
-    dragDropZone.addEventListener('dragover', function(event) {
-      event.preventDefault();
-      dragDropZone.classList.add('dragover');
-    });
-    dragDropZone.addEventListener('dragleave', function(event) {
-      event.preventDefault();
-      dragDropZone.classList.remove('dragover');
-    });
-    dragDropZone.addEventListener('drop', function(event) {
-      event.preventDefault();
-      dragDropZone.classList.remove('dragover');
-      if (event.dataTransfer.files.length > 0) {
-        previewAndSetFile(event.dataTransfer.files[0]);
-        document.getElementById('newCouponImageFile').value = '';
-        document.getElementById('newCouponCameraFile').value = '';
-      }
-    });
+    if (dragDropZone) {
+        dragDropZone.addEventListener('dragover', function(event) {
+          event.preventDefault();
+          dragDropZone.classList.add('dragover');
+        });
+        dragDropZone.addEventListener('dragleave', function(event) {
+          event.preventDefault();
+          dragDropZone.classList.remove('dragover');
+        });
+        dragDropZone.addEventListener('drop', function(event) {
+          event.preventDefault();
+          dragDropZone.classList.remove('dragover');
+          if (event.dataTransfer.files.length > 0) {
+            previewAndSetFile(event.dataTransfer.files[0]);
+            if(newCouponImageFileInput) newCouponImageFileInput.value = '';
+            if(newCouponCameraFileInput) newCouponCameraFileInput.value = '';
+          }
+        });
+    }
 
-    loadLatestCoupons();
     loadAllCoupons();
   };
 </script>
